@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="scan">扫描</string>
+    <string name="main_page_title">首页</string>
+    <string name="question_page_title">问答</string>
+    <string name="system_page_title">体系</string>
+    <string name="me_page_title">我的</string>
+</resources>

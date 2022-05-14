@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">FeedApp</string>
+    <string name="scan">扫描</string>
+    <string name="main_page_title">首页</string>
+    <string name="question_page_title">问答</string>
+    <string name="system_page_title">体系</string>
+    <string name="me_page_title">我的</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>

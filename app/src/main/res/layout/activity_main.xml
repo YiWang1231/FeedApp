@@ -54,8 +54,8 @@
         android:id="@+id/divider"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="#dfdfdf"
-        android:layout_above="@id/page_navi"/>
+        android:layout_above="@id/page_navi"
+        android:background="#dfdfdf" />
 
 <!--这里是导航栏-->
     <LinearLayout
@@ -66,96 +66,5 @@
         android:baselineAligned="false"
         android:gravity="center_vertical"
         android:orientation="horizontal">
-
-        <LinearLayout
-            android:id="@+id/navi_main"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center_horizontal"
-            android:orientation="vertical"
-            tools:ignore="UseCompoundDrawables">
-
-            <ImageView
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:contentDescription="@string/main_page_title"
-                android:src="@drawable/ic_bottom_bar_home"
-                app:tint="@color/tab_color_selector" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:textColor="@drawable/navi_title_color_selector"
-                android:text="@string/main_page_title" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/navi_question"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center_horizontal"
-            tools:ignore="UseCompoundDrawables">
-            <ImageView
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:src="@drawable/menu_question_icon_selector"
-                android:contentDescription="@string/question_page_title"
-                app:tint="@color/tab_color_selector" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@drawable/navi_title_color_selector"
-                android:text="@string/question_page_title"
-                android:gravity="center"/>
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/navi_system"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center_horizontal"
-            tools:ignore="UseCompoundDrawables">
-            <ImageView
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:src="@drawable/menu_sys_icon_selector"
-                android:contentDescription="@string/system_page_title"
-                app:tint="@color/tab_color_selector" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@drawable/navi_title_color_selector"
-                android:text="@string/system_page_title"
-                android:gravity="center"/>
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/navi_me"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center_horizontal"
-            tools:ignore="UseCompoundDrawables">
-            <ImageView
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:src="@drawable/ic_bottom_bar_mine"
-                android:contentDescription="@string/me_page_title"
-                app:tint="@color/tab_color_selector" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@drawable/navi_title_color_selector"
-                android:text="@string/me_page_title"
-                android:gravity="center"/>
-        </LinearLayout>
-
     </LinearLayout>
 </RelativeLayout>

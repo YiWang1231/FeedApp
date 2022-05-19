@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingHorizontal="16dp"
+    android:paddingBottom="32dp">
+    <RelativeLayout
+        android:id="@+id/course_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/new_course_tag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:gravity="center"
+            android:text="@string/new_course"
+            android:textColor="@color/new_course_blue"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/course_author"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="5dp"
+            android:layout_toEndOf="@+id/new_course_tag"
+            android:gravity="center"
+            android:textColor="@color/name_gray"
+            android:textSize="12sp"
+            tools:text="@string/author_example" />
+
+        <TextView
+            android:id="@+id/course_tag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:layout_toEndOf="@+id/course_author"
+            android:background="@drawable/border_textview_bg"
+            android:gravity="center"
+            android:padding="3dp"
+            android:textColor="@color/new_course_blue"
+            android:textSize="11sp"
+            tools:text="@string/tag_example" />
+
+        <TextView
+            android:id="@+id/nice_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:gravity="center"
+            android:textColor="@color/name_gray"
+            android:textSize="12sp"
+            tools:ignore="RelativeOverlap"
+            tools:text="2022-05-06 11:35" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/course_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp">
+
+        <com.peter.feedapp.view.RoundCornerImageView
+            android:id="@+id/course_img"
+            android:layout_width="120dp"
+            android:layout_height="80dp"
+            android:background="@color/course_bg"
+            android:contentDescription="@string/course_img"
+            android:scaleType="centerCrop"
+            app:radius="6dp"
+            tools:src="@drawable/test" />
+
+        <TextView
+            android:id="@+id/course_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:layout_toEndOf="@id/course_img"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/title_black"
+            android:textSize="15sp"
+            tools:text="@string/course_title" />
+
+        <TextView
+            android:id="@+id/course_desc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/course_title"
+            android:layout_marginStart="5dp"
+            android:layout_marginTop="3dp"
+            android:layout_toEndOf="@id/course_img"
+            android:ellipsize="end"
+            android:maxLines="3"
+            android:textColor="@color/date_gray"
+            android:textSize="13sp"
+            tools:text="@string/course_desc" />
+
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/course_footer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp">
+
+        <TextView
+            android:id="@+id/top_tag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/top_tag"
+            android:textColor="@color/red"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/course_chapter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:layout_toEndOf="@+id/top_tag"
+            android:text="@string/chapter_name"
+            android:textColor="@color/date_gray"
+            android:textSize="12sp" />
+    </RelativeLayout>
+</LinearLayout>

@@ -3,8 +3,6 @@ package com.peter.feedapp
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
-import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
@@ -15,8 +13,8 @@ import com.peter.feedapp.fragment.FragmentMain
 import com.peter.feedapp.fragment.FragmentMe
 import com.peter.feedapp.fragment.FragmentQuestion
 import com.peter.feedapp.fragment.FragmentSystem
-import com.peter.feedapp.model.TabGroup
-import com.peter.feedapp.model.TabItem
+import com.peter.feedapp.bean.TabGroup
+import com.peter.feedapp.bean.TabItem
 
 class MainActivity : AppCompatActivity() {
     private val titleIDs = intArrayOf(
@@ -33,15 +31,12 @@ class MainActivity : AppCompatActivity() {
     private  var tabList: MutableList<View> = ArrayList()
     private lateinit var tabGroup: TabGroup
     private lateinit var mainFragment: FragmentMain
-    private lateinit var questionFragment : FragmentQuestion
-    private lateinit var systemFragment : FragmentSystem
-    private lateinit var meFragment : FragmentMe
+    private lateinit var questionFragment: FragmentQuestion
+    private lateinit var systemFragment: FragmentSystem
+    private lateinit var meFragment: FragmentMe
     private  var fragments: MutableList<Fragment> = ArrayList()
-    private lateinit var containerContent : ViewPager
-    private lateinit var mainNaviTab : LinearLayout
-    private lateinit var questionNaviTab : LinearLayout
-    private lateinit var systemNaviTab : LinearLayout
-    private lateinit var meNaviTab : LinearLayout
+    private lateinit var containerContent: ViewPager
+    private lateinit var pageTitle: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +50,7 @@ class MainActivity : AppCompatActivity() {
      */
     private fun initView() {
         containerContent = findViewById(R.id.container_content)
+        pageTitle = findViewById(R.id.page_title)
         initTabLayout()
         initFragments()
         initContent()
@@ -81,6 +77,7 @@ class MainActivity : AppCompatActivity() {
 
             override fun onPageSelected(position: Int) {
                 tabGroup.selectTab(position)
+                pageTitle.setText(titleIDs[position])
             }
 
             override fun onPageScrollStateChanged(state: Int) {
@@ -121,6 +118,7 @@ class MainActivity : AppCompatActivity() {
         for ((index, tabItem) in tabGroup.tabList.withIndex()) {
             tabItem.setOnClickListener {
                 tabGroup.selectTab(index)
+                pageTitle.setText(titleIDs[index])
                 containerContent.setCurrentItem(index, true)
             }
         }

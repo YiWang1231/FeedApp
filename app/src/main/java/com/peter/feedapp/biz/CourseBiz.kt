@@ -85,7 +85,7 @@ class CourseBiz {
                     }
                     root.optJSONObject("data")?.optJSONArray("datas")!!
                 }
-                for (i in 0 until dataJsonArray.length() - 1 ) {
+                for (i in 0 until dataJsonArray.length()) {
                     val courseJsonObject = dataJsonArray.getJSONObject(i)
                     val course: Course = Course()
                     // 设置title

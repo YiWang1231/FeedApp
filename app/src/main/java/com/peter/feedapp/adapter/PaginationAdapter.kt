@@ -28,7 +28,8 @@ class PaginationAdapter(var context: Context): RecyclerView.Adapter<CourseViewHo
         holder.itemView.setOnClickListener(View.OnClickListener {
             val intent = Intent(context, CourseActivity::class.java)
             intent.putExtra("url", course.link)
-            Log.e("tag", course.link)
+            context.startActivity(intent)
+//            Log.e("tag", course.link)
         })
 
         // 绑定数据

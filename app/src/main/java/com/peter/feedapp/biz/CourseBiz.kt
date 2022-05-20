@@ -1,7 +1,6 @@
 package com.peter.feedapp.biz
 
 import android.os.AsyncTask
-import android.util.Log
 import com.peter.feedapp.bean.Course
 import com.peter.feedapp.utils.HttpUtils
 import org.json.JSONArray
@@ -23,7 +22,7 @@ class CourseBiz {
         }
     }
 
-    class GetCourseTask(var callback: Callback): AsyncTask<Int, Void, MutableList<Course>>() {
+    class GetCourseTask(private var callback: Callback): AsyncTask<Int, Void, MutableList<Course>>() {
         private var exception: Exception? = null
 
         @Deprecated("Deprecated in Java")
@@ -81,13 +80,13 @@ class CourseBiz {
                 } else {
                     // 首次获取初始化总页数
                     if (root.optJSONObject("data")?.optInt("curPage") == 1) {
-                        CourseBiz.totalPage = root.optJSONObject("data")?.optInt("pageCount")!!
+                        totalPage = root.optJSONObject("data")?.optInt("pageCount")!!
                     }
                     root.optJSONObject("data")?.optJSONArray("datas")!!
                 }
                 for (i in 0 until dataJsonArray.length()) {
                     val courseJsonObject = dataJsonArray.getJSONObject(i)
-                    val course: Course = Course()
+                    val course = Course()
                     // 设置title
                     course.title = courseJsonObject.getString("title")
                     // 设置描述

@@ -14,7 +14,5 @@ data class Course(var id: Int,
              var fresh: Boolean,
              var type: Int) {
 
-    constructor():this(0, "", "", "", "", "", "", "", "",  "", false, 0) {
-
-    }
+    constructor():this(0, "", "", "", "", "", "", "", "",  "", false, 0)
 }

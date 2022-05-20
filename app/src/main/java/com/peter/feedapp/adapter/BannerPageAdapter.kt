@@ -2,14 +2,12 @@ package com.peter.feedapp.adapter
 
 import android.content.Context
 import android.content.Intent
-import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.peter.feedapp.CourseActivity
-import com.peter.feedapp.R
 import com.peter.feedapp.bean.Banner
 import com.peter.feedapp.view.BannerView
 
@@ -18,9 +16,10 @@ class BannerPageAdapter(var context: Context): RecyclerView.Adapter<BannerPageVi
     private lateinit var viewPager2: ViewPager2
     private lateinit var dotGroup: ViewGroup
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BannerPageViewHolder {
-        val itemView = LayoutInflater.from(context).inflate(R.layout.banner_container, parent, false)
-        viewPager2 = itemView.findViewById(R.id.banner)
-        dotGroup = itemView.findViewById(R.id.dots)
+//        val itemView = LayoutInflater.from(context).inflate(R.layout.banner_container, parent, false)
+        viewPager2 = ViewPager2(context)
+        dotGroup = LinearLayout(context)
+//        dotGroup = itemView.findViewById(R.id.dots)
         bannerView = BannerView(context, viewPager2, dotGroup, object: ClickListener {
             override fun onClick(banner: Banner) {
                 val intent = Intent(context, CourseActivity::class.java)
@@ -31,7 +30,8 @@ class BannerPageAdapter(var context: Context): RecyclerView.Adapter<BannerPageVi
         })
 
         bannerView.init()
-        return BannerPageViewHolder(itemView)
+//        bannerView.addView(itemView)
+        return BannerPageViewHolder(bannerView)
     }
 
     override fun getItemCount(): Int {

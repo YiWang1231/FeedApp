@@ -6,19 +6,19 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import android.widget.ImageView
-import android.widget.LinearLayout
+import android.widget.RelativeLayout
 import androidx.viewpager2.widget.ViewPager2
 import com.peter.feedapp.R
 import com.peter.feedapp.adapter.BannerAdapter
 import com.peter.feedapp.adapter.ClickListener
+import com.peter.feedapp.adapter.PaginationAdapter
 import com.peter.feedapp.bean.Banner
 import com.peter.feedapp.biz.BannerBiz
 
 private const val PAGE_START = 1
 
-class BannerView(context: Context, var viewPager2: ViewPager2, private var dotGroup: ViewGroup?, var clickListener: ClickListener?): FrameLayout(context){
+class BannerView(context: Context, var viewPager2: ViewPager2, private var dotGroup: ViewGroup?, var clickListener: ClickListener?): RelativeLayout(context){
     private lateinit var adapter: BannerAdapter
     private var banners: MutableList<Banner> = ArrayList()
     private var currentPage = PAGE_START
@@ -50,6 +50,10 @@ class BannerView(context: Context, var viewPager2: ViewPager2, private var dotGr
 
     @SuppressLint("ClickableViewAccessibility")
     fun init() {
+        // 初始化样式
+        val bannerParams = LayoutParams(LayoutParams.MATCH_PARENT, PaginationAdapter(context).getPixelFromDp(200F, context))
+        this.layoutParams = bannerParams
+        viewPager2.layoutParams = bannerParams
         loadData()
         adapter = BannerAdapter(context, banners, object: ClickListener {
             override fun onClick(banner: Banner) {
@@ -68,7 +72,6 @@ class BannerView(context: Context, var viewPager2: ViewPager2, private var dotGr
                     Log.e("currentPage", "" + currentPage)
                     selectDot(currentPage - 1)
                 }
-
             }
 
             override fun onPageScrollStateChanged(state: Int) {
@@ -83,34 +86,26 @@ class BannerView(context: Context, var viewPager2: ViewPager2, private var dotGr
             }
 
         })
-
+        this.addView(viewPager2)
         // 自动滑动
         viewPager2.postDelayed(mLooper, 5000)
-        // 触动停止
-//        viewPager2?.getChildAt(0)?.setOnTouchListener { _, event ->
-//            when (event.action) {
-//                MotionEvent.ACTION_DOWN -> {
-//                    Log.e("touch", "down")
-//                    viewPager2?.removeCallbacks(mLooper)
-//                }
-//                MotionEvent.ACTION_UP -> {
-//                    Log.e("touch", "up")
-//                    viewPager2?.postDelayed(mLooper,10000)
-//                }
-//            }
-//            return@setOnTouchListener false
-//        }
     }
 
     @SuppressLint("InflateParams")
     private fun buildDots() {
         for (int in 0 until totalPage) {
             val view: ImageView = LayoutInflater.from(context).inflate(R.layout.dot_item, null) as ImageView
-            val layoutParams = LinearLayout.LayoutParams(60, 60)
+            val layoutParams = LayoutParams(60, 60)
             view.layoutParams = layoutParams
             dotGroup?.addView(view)
             dotList.add(view)
         }
+        Log.e("width", "" + PaginationAdapter(context).getPixelFromDp(30F, context))
+        val dotsParams = LayoutParams(LayoutParams.WRAP_CONTENT, PaginationAdapter(context).getPixelFromDp(30F, context))
+        dotsParams.addRule(ALIGN_PARENT_BOTTOM, TRUE)
+        dotsParams.addRule(CENTER_HORIZONTAL, TRUE)
+//        dotsParams.bottomMargin = PaginationAdapter(context).getPixelFromDp(15F, context)
+        this.addView(dotGroup, dotsParams)
     }
 
     fun selectDot(int: Int) {

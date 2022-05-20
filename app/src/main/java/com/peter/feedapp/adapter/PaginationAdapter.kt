@@ -92,7 +92,7 @@ class PaginationAdapter(var context: Context): RecyclerView.Adapter<CourseViewHo
         return params
     }
 
-    private fun getPixelFromDp(dpValue: Float, context: Context): Int {
+    fun getPixelFromDp(dpValue: Float, context: Context): Int {
         val scale: Float = context.resources.displayMetrics.density
         return (scale * dpValue + 0.5F).toInt()
     }

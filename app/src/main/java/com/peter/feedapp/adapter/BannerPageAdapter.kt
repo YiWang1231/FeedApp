@@ -3,6 +3,7 @@ package com.peter.feedapp.adapter
 import android.content.Context
 import android.content.Intent
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -25,10 +26,10 @@ class BannerPageAdapter(var context: Context): RecyclerView.Adapter<BannerPageVi
                 val intent = Intent(context, CourseActivity::class.java)
                 intent.putExtra("url", banner.url)
                 context.startActivity(intent)
-//                Log.e("tag", banner.url)
             }
 
         })
+
         bannerView.init()
         return BannerPageViewHolder(itemView)
     }

@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.viewpager2.widget.ViewPager2
@@ -17,18 +18,42 @@ import com.peter.feedapp.biz.BannerBiz
 
 private const val PAGE_START = 1
 
-class BannerView(var context: Context, var viewPager2: ViewPager2, private var dotGroup: ViewGroup, var clickListener: ClickListener) {
+class BannerView(context: Context, var viewPager2: ViewPager2, private var dotGroup: ViewGroup?, var clickListener: ClickListener?): FrameLayout(context){
     private lateinit var adapter: BannerAdapter
     private var banners: MutableList<Banner> = ArrayList()
     private var currentPage = PAGE_START
     private var totalPage = 0
     private var dotList: MutableList<ImageView> = ArrayList()
+    private val mLooper = object :Runnable {
+        override fun run() {
+            viewPager2.currentItem = ++viewPager2.currentItem
+            viewPager2.postDelayed(this, 5000)
+        }
+
+    }
+
+    constructor(context: Context): this(context, ViewPager2(context), null, null)
+
+    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
+        val action = ev?.action
+        Log.e("Touch", "somethingHappened")
+        if (action == MotionEvent.ACTION_DOWN) {
+            Log.e("down", "remove")
+            // 移除mLooper
+            viewPager2.removeCallbacks(mLooper)
+        }
+        if (action == MotionEvent.ACTION_UP) {
+            viewPager2.postDelayed(mLooper, 5000)
+        }
+        return super.dispatchTouchEvent(ev)
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     fun init() {
         loadData()
         adapter = BannerAdapter(context, banners, object: ClickListener {
             override fun onClick(banner: Banner) {
-                clickListener.onClick(banner)
+                clickListener?.onClick(banner)
             }
         })
         viewPager2.adapter = adapter
@@ -59,29 +84,22 @@ class BannerView(var context: Context, var viewPager2: ViewPager2, private var d
 
         })
 
-        val mLooper = object :Runnable {
-            override fun run() {
-                viewPager2.currentItem = ++viewPager2.currentItem
-                viewPager2.postDelayed(this, 10000)
-            }
-
-        }
         // 自动滑动
-        viewPager2.postDelayed(mLooper, 10000)
+        viewPager2.postDelayed(mLooper, 5000)
         // 触动停止
-        viewPager2.getChildAt(0).setOnTouchListener { _, event ->
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    Log.e("touch", "down")
-                    viewPager2.removeCallbacks(mLooper)
-                }
-                MotionEvent.ACTION_UP -> {
-                    Log.e("touch", "up")
-                    viewPager2.postDelayed(mLooper,10000)
-                }
-            }
-            return@setOnTouchListener false
-        }
+//        viewPager2?.getChildAt(0)?.setOnTouchListener { _, event ->
+//            when (event.action) {
+//                MotionEvent.ACTION_DOWN -> {
+//                    Log.e("touch", "down")
+//                    viewPager2?.removeCallbacks(mLooper)
+//                }
+//                MotionEvent.ACTION_UP -> {
+//                    Log.e("touch", "up")
+//                    viewPager2?.postDelayed(mLooper,10000)
+//                }
+//            }
+//            return@setOnTouchListener false
+//        }
     }
 
     @SuppressLint("InflateParams")
@@ -90,7 +108,7 @@ class BannerView(var context: Context, var viewPager2: ViewPager2, private var d
             val view: ImageView = LayoutInflater.from(context).inflate(R.layout.dot_item, null) as ImageView
             val layoutParams = LinearLayout.LayoutParams(60, 60)
             view.layoutParams = layoutParams
-            dotGroup.addView(view)
+            dotGroup?.addView(view)
             dotList.add(view)
         }
     }

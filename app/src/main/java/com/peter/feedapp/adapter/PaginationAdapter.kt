@@ -56,7 +56,7 @@ class PaginationAdapter(var context: Context): RecyclerView.Adapter<CourseViewHo
         if (course.tag.isEmpty()) {
             holder.tagCourse.visibility = View.GONE
         } else {
-            holder.tagCourse.visibility = View.GONE
+            holder.tagCourse.visibility = View.VISIBLE
             holder.tagCourse.text = course.tag
         }
 

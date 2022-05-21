@@ -11,8 +11,8 @@
 
     <ImageView
         android:id="@+id/tab_icon"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
         tools:src="@drawable/ic_bottom_bar_navi"
         android:contentDescription="@string/system_page_title"
         app:tint="@color/tab_color_selector" />

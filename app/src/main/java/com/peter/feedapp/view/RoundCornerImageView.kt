@@ -6,21 +6,20 @@ import android.content.res.TypedArray
 import android.graphics.Canvas
 import android.graphics.Path
 import android.util.AttributeSet
-import android.util.Log
 import androidx.appcompat.widget.AppCompatImageView
 import com.peter.feedapp.R
 import kotlin.math.max
-import kotlin.properties.Delegates
 
-class RoundCornerImageView(context: Context, attrs: AttributeSet): AppCompatImageView(context, attrs) {
-    private var viewWidth by Delegates.notNull<Float>()
-    private var viewHeight by Delegates.notNull<Float>()
+class RoundCornerImageView(context: Context, attrs: AttributeSet? = null): AppCompatImageView(context, attrs) {
+    private var viewWidth = 0F
+    private var viewHeight = 0F
     private val defaultCornerRadius = 0
-    private var cornerRadius by Delegates.notNull<Int>()
-    private var leftTopRadius by Delegates.notNull<Int>()
-    private var rightTopRadius by Delegates.notNull<Int>()
-    private var rightBottomRadius by Delegates.notNull<Int>()
-    private var leftBottomRadius by Delegates.notNull<Int>()
+    private var cornerRadius = 0
+    private var leftTopRadius = 0
+    private var rightTopRadius = 0
+    private var rightBottomRadius = 0
+    private var leftBottomRadius = 0
+    private val path = Path()
 
     init {
         val ta: TypedArray = context.obtainStyledAttributes(attrs, R.styleable.RoundCornerImageView)
@@ -65,8 +64,7 @@ class RoundCornerImageView(context: Context, attrs: AttributeSet): AppCompatImag
         val maxBottom = max(leftBottomRadius, rightBottomRadius)
         val minHeight = maxTop + maxBottom
         if (viewWidth > minWidth && viewHeight > minHeight) {
-            Log.e("onLayout", "" + leftBottomRadius)
-            val path = Path()
+            path.reset()
             // 左上
             path.moveTo(leftTopRadius.toFloat(), 0F)
             path.lineTo(viewWidth - rightTopRadius, 0F)

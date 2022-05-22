@@ -2,20 +2,19 @@ package com.peter.feedapp.biz
 
 import android.os.AsyncTask
 import com.peter.feedapp.bean.Banner
+import com.peter.feedapp.bean.NetDataBase
+import com.peter.feedapp.utils.GsonUtils
 import com.peter.feedapp.utils.HttpUtils
-import org.json.JSONObject
 import kotlin.Exception
 
 private const val BANNER_API = "https://www.wanandroid.com/banner/json"
 
 class BannerBiz {
+    private lateinit var getBannerTask: GetBannerTask
 
-    companion object {
-        private lateinit var getBannerTask: GetBannerTask
-        fun getBanners(callBack: CallBack) {
-            getBannerTask = GetBannerTask(callBack)
-            getBannerTask.execute()
-        }
+    fun getBanners(callBack: CallBack) {
+        getBannerTask = GetBannerTask(callBack)
+        getBannerTask.execute()
     }
 
     class GetBannerTask(private var callBack: CallBack):AsyncTask<Void, Void, MutableList<Banner>>() {
@@ -44,25 +43,18 @@ class BannerBiz {
         }
 
         private fun getBannerList():MutableList<Banner> {
-            val content = HttpUtils.doGet(BANNER_API)
+            val content = HttpUtils.newInstance().doGet(BANNER_API)
             return parseContent(content)
         }
 
-        private fun parseContent(content: String): MutableList<Banner>{
-            // 解析数据
+        private fun parseContent(content: String): MutableList<Banner> {
+            // 数据解析
             val bannerList: MutableList<Banner> = ArrayList()
-            val root = JSONObject(content)
-            val errorCode = root.opt("errorCode")
-            if (errorCode == 0) {
-                val dataJsonArray = root.optJSONArray("data")
-                for (i in 0 until dataJsonArray!!.length()){
-                    val bannerJsonObject = dataJsonArray.getJSONObject(i)
-                    val banner = Banner()
-                    banner.title = bannerJsonObject.getString("title")
-                    banner.imagePath = bannerJsonObject.getString("imagePath")
-                    banner.url = bannerJsonObject.getString("url")
-                    bannerList.add(banner)
-                }
+            val netDataBase: NetDataBase<Banner> =
+                GsonUtils.gsonProvider.fromJson<NetDataBase<Banner>>(content, NetDataBase::class.java)
+            if (netDataBase.errorCode == 0) {
+                val dataArray = GsonUtils.newInstance().bean2Json(netDataBase.data)
+                bannerList.addAll(GsonUtils.newInstance().gson2List(dataArray, Banner::class.java))
             }
             return bannerList
         }

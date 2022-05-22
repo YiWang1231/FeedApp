@@ -1,29 +1,28 @@
 package com.peter.feedapp.biz
 
 import android.os.AsyncTask
+import android.util.Log
 import com.peter.feedapp.bean.Course
+import com.peter.feedapp.utils.GsonUtils
 import com.peter.feedapp.utils.HttpUtils
 import org.json.JSONArray
 import org.json.JSONObject
 import org.jsoup.Jsoup
 import java.lang.Exception
-import kotlin.properties.Delegates
 
 private const val TOP_COURSE_LIST_API = "https://www.wanandroid.com/article/top/json"
 class CourseBiz {
 
-    companion object {
-        private lateinit var getCourseTask: GetCourseTask
-        var totalPage by Delegates.notNull<Int>()
+    private lateinit var getCourseTask: GetCourseTask
 
-        fun getCourses(page: Int, callback: Callback) {
-            getCourseTask = GetCourseTask(callback)
-            getCourseTask.execute(page)
-        }
+    fun getCourses(page: Int, callback: Callback) {
+        getCourseTask = GetCourseTask(callback)
+        getCourseTask.execute(page)
     }
 
     class GetCourseTask(private var callback: Callback): AsyncTask<Int, Void, MutableList<Course>>() {
         private var exception: Exception? = null
+        private var totalPage = 0
 
         @Deprecated("Deprecated in Java")
         override fun doInBackground(vararg pages: Int?): MutableList<Course> {
@@ -53,17 +52,20 @@ class CourseBiz {
                 callback.onFailed(exception!!)
                 return
             }
-            callback.onSuccess(result!!)
+            callback.onSuccess(result!!, totalPage)
         }
 
         private fun getTopList(): MutableList<Course> {
-            val content = HttpUtils.doGet(TOP_COURSE_LIST_API)
+            Log.e("courseBiz", "top")
+            val content = HttpUtils.newInstance().doGet(TOP_COURSE_LIST_API)
             return parseContent(content, true)
         }
 
         private fun getCurrentPageCourseList(page: Int): MutableList<Course> {
+            Log.e("courseBiz", "list")
             val courseListApi = "https://www.wanandroid.com/article/list/$page/json"
-            val content = HttpUtils.doGet(courseListApi)
+            println(courseListApi)
+            val content = HttpUtils.newInstance().doGet(courseListApi)
             return parseContent(content, false)
         }
 
@@ -75,6 +77,7 @@ class CourseBiz {
             val dataJsonArray: JSONArray
             if (errorCode == 0) {
                 // topList和普通的列表json数据结构不一样
+                // 测试
                 dataJsonArray = if (isTopContent) {
                     root.optJSONArray("data")!!
                 } else {
@@ -84,11 +87,10 @@ class CourseBiz {
                     }
                     root.optJSONObject("data")?.optJSONArray("datas")!!
                 }
+
                 for (i in 0 until dataJsonArray.length()) {
                     val courseJsonObject = dataJsonArray.getJSONObject(i)
-                    val course = Course()
-                    // 设置title
-                    course.title = courseJsonObject.getString("title")
+                    val course = GsonUtils.newInstance().gson2Bean(courseJsonObject.toString(), Course::class.java)
                     // 设置描述
                     val desc = courseJsonObject.getString("desc")
                     if (desc.isNotEmpty()) {
@@ -97,8 +99,7 @@ class CourseBiz {
                     } else {
                         course.desc = desc
                     }
-                    // 设置图片
-                    course.envelopePic = courseJsonObject.getString("envelopePic")
+
                     // 设置作者
                     if (courseJsonObject.getString("author").isNotEmpty()) {
                         course.author = courseJsonObject.getString("author")
@@ -106,23 +107,14 @@ class CourseBiz {
                         course.author = courseJsonObject.getString("shareUser")
                     }
 
-                    // 设置日期
-                    course.niceDate = courseJsonObject.getString("niceDate")
-                    // 设置链接
-                    course.link = courseJsonObject.getString("link")
-                    // 设置章节
-                    course.superChapterName = courseJsonObject.getString("superChapterName")
-                    course.chapterName = courseJsonObject.getString("chapterName")
                     // 设置tag
                     val tagJsonArray = courseJsonObject.optJSONArray("tags")
                     if (tagJsonArray!!.length() > 0) {
                         val tagJsonObject = tagJsonArray.getJSONObject(0)
                         course.tag = tagJsonObject.getString("name")
+                    } else {
+                        course.tag = ""
                     }
-                    // 设置fresh
-                    course.fresh =  courseJsonObject.getBoolean("fresh")
-                    // 设置类型 0:Top 1:普通
-                    course.type  = courseJsonObject.getInt("type")
                     courseList.add(course)
                 }
             }
@@ -131,7 +123,7 @@ class CourseBiz {
     }
 
     interface Callback {
-        fun onSuccess(courseList: MutableList<Course>)
+        fun onSuccess(courseList: MutableList<Course>, totalPages: Int)
         fun onFailed (exception: Exception)
     }
 }

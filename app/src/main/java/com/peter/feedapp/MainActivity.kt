@@ -2,45 +2,24 @@ package com.peter.feedapp
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.View
-import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.viewpager.widget.ViewPager
 import androidx.viewpager.widget.ViewPager.OnPageChangeListener
 import com.peter.feedapp.adapter.FragmentAdapter
-import com.peter.feedapp.fragment.FragmentMain
-import com.peter.feedapp.fragment.FragmentMe
-import com.peter.feedapp.fragment.FragmentQuestion
-import com.peter.feedapp.fragment.FragmentSystem
-import com.peter.feedapp.bean.TabGroup
-import com.peter.feedapp.bean.TabItem
+import com.peter.feedapp.view.TabGroup
+import com.peter.feedapp.view.TabItem
+import com.peter.feedapp.databinding.ActivityMainBinding
+import com.peter.feedapp.view.PageEnum
 
 class MainActivity : AppCompatActivity() {
-    private val titleIDs = intArrayOf(
-        R.string.main_page_title,
-        R.string.question_page_title,
-        R.string.system_page_title,
-        R.string.me_page_title)
-    private val iconResourcesIDs = intArrayOf(
-        R.drawable.ic_bottom_bar_home,
-        R.drawable.ic_bottom_bar_ques,
-        R.drawable.ic_bottom_bar_navi,
-        R.drawable.ic_bottom_bar_mine
-    )
-    private  var tabList: MutableList<View> = ArrayList()
+    private lateinit var binding: ActivityMainBinding
     private lateinit var tabGroup: TabGroup
-    private lateinit var mainFragment: FragmentMain
-    private lateinit var questionFragment: FragmentQuestion
-    private lateinit var systemFragment: FragmentSystem
-    private lateinit var meFragment: FragmentMe
-    private  var fragments: MutableList<Fragment> = ArrayList()
-    private lateinit var containerContent: ViewPager
-    private lateinit var pageTitle: TextView
+    private  var fragments: MutableList<Lazy<Fragment>> = ArrayList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        val view = binding.root
+        setContentView(view)
         initView()
         setTabClickListener()
     }
@@ -49,10 +28,7 @@ class MainActivity : AppCompatActivity() {
      * 初始化界面view
      */
     private fun initView() {
-        containerContent = findViewById(R.id.container_content)
-        pageTitle = findViewById(R.id.page_title)
-        initTabLayout()
-        initFragments()
+        initPages()
         initContent()
         // 初始化选定主页tab
         tabGroup.selectTab(0)
@@ -64,49 +40,38 @@ class MainActivity : AppCompatActivity() {
      */
     private fun initContent() {
         val adapter = FragmentAdapter(supportFragmentManager, fragments)
-        containerContent.adapter = adapter
+        binding.containerContent.adapter = adapter
         // TODO 设定监听实现与tab联动
-        containerContent.addOnPageChangeListener(object : OnPageChangeListener {
+        binding.containerContent.addOnPageChangeListener(object : OnPageChangeListener {
             override fun onPageScrolled(
                 position: Int,
                 positionOffset: Float,
                 positionOffsetPixels: Int
             ) {
-                //TODO("Not yet implemented")
+
             }
 
             override fun onPageSelected(position: Int) {
                 tabGroup.selectTab(position)
-                pageTitle.setText(titleIDs[position])
+                binding.pageTitle.text = getString(PageEnum.values()[position].titleId)
             }
 
             override fun onPageScrollStateChanged(state: Int) {
-                //TODO("Not yet implemented")
+
             }
 
         })
     }
 
     /***
-     * 初始化Fragment
+     * 初始化Fragment及tabGroup
      */
-    private fun initFragments() {
-        // 初始化Fragment
-        mainFragment = FragmentMain.newInstance(getString(titleIDs[0]))
-        questionFragment = FragmentQuestion.newInstance(getString(titleIDs[1]))
-        systemFragment = FragmentSystem.newInstance(getString(titleIDs[2]))
-        meFragment = FragmentMe.newInstance(getString(titleIDs[3]))
-        fragments.add(mainFragment)
-        fragments.add(questionFragment)
-        fragments.add(systemFragment)
-        fragments.add(meFragment)
-    }
-
-    private fun initTabLayout() {
+    private fun initPages() {
         tabGroup = TabGroup(this)
-        tabGroup.group = findViewById(R.id.page_navi)
-        for (index in titleIDs.indices) {
-            val tabItem: TabItem = TabItem(titleIDs[index], iconResourcesIDs[index])
+        tabGroup.group = binding.pageNavi
+        PageEnum.values().forEach {
+            fragments.add(it.fragmentLazy)
+            val tabItem = TabItem(it.titleId, it.iconId)
             tabGroup.addTabItem(tabItem)
         }
     }
@@ -118,8 +83,8 @@ class MainActivity : AppCompatActivity() {
         for ((index, tabItem) in tabGroup.tabList.withIndex()) {
             tabItem.setOnClickListener {
                 tabGroup.selectTab(index)
-                pageTitle.setText(titleIDs[index])
-                containerContent.setCurrentItem(index, true)
+                binding.pageTitle.text = getString(PageEnum.values()[index].titleId)
+                binding.containerContent.setCurrentItem(index, true)
             }
         }
     }

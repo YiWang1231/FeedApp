@@ -8,11 +8,14 @@ import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
 import com.peter.feedapp.R
 import com.peter.feedapp.bean.Banner
+import com.peter.feedapp.databinding.BannerImgBinding
 import com.squareup.picasso.Picasso
 
 class BannerAdapter(var context: Context, private var bannerList: MutableList<Banner>, private var clickListener: ClickListener): RecyclerView.Adapter<BannerViewHolder>() {
+    private lateinit var binding: BannerImgBinding
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BannerViewHolder {
-        return BannerViewHolder(LayoutInflater.from(context).inflate(R.layout.banner_img, parent,false))
+        binding = BannerImgBinding.inflate(LayoutInflater.from(context), parent, false)
+        return BannerViewHolder(binding.root)
     }
 
 

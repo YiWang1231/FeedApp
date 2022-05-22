@@ -1,16 +1,17 @@
 package com.peter.feedapp
 
-import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.webkit.WebView
+import com.peter.feedapp.databinding.ActivityCourseBinding
 
 class CourseActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityCourseBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_course)
+        val view = binding.root
+        setContentView(view)
         val url = intent.getStringExtra("url")
-        val webView: WebView = findViewById(R.id.web)
-        webView.loadUrl(url!!)
+        binding.web.loadUrl(url!!)
     }
 }

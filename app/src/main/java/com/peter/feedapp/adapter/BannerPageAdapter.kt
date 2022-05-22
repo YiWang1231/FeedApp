@@ -16,10 +16,8 @@ class BannerPageAdapter(var context: Context): RecyclerView.Adapter<BannerPageVi
     private lateinit var viewPager2: ViewPager2
     private lateinit var dotGroup: ViewGroup
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BannerPageViewHolder {
-//        val itemView = LayoutInflater.from(context).inflate(R.layout.banner_container, parent, false)
         viewPager2 = ViewPager2(context)
         dotGroup = LinearLayout(context)
-//        dotGroup = itemView.findViewById(R.id.dots)
         bannerView = BannerView(context, viewPager2, dotGroup, object: ClickListener {
             override fun onClick(banner: Banner) {
                 val intent = Intent(context, CourseActivity::class.java)
@@ -30,7 +28,6 @@ class BannerPageAdapter(var context: Context): RecyclerView.Adapter<BannerPageVi
         })
 
         bannerView.init()
-//        bannerView.addView(itemView)
         return BannerPageViewHolder(bannerView)
     }
 

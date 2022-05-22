@@ -2,7 +2,6 @@ package com.peter.feedapp.view
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.ViewGroup
@@ -36,9 +35,7 @@ class BannerView(context: Context, var viewPager2: ViewPager2, private var dotGr
 
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
         val action = ev?.action
-        Log.e("Touch", "somethingHappened")
         if (action == MotionEvent.ACTION_DOWN) {
-            Log.e("down", "remove")
             // 移除mLooper
             viewPager2.removeCallbacks(mLooper)
         }
@@ -69,7 +66,6 @@ class BannerView(context: Context, var viewPager2: ViewPager2, private var dotGr
                     selectDot(0)
                 } else {
                     currentPage = position
-                    Log.e("currentPage", "" + currentPage)
                     selectDot(currentPage - 1)
                 }
             }
@@ -100,7 +96,6 @@ class BannerView(context: Context, var viewPager2: ViewPager2, private var dotGr
             dotGroup?.addView(view)
             dotList.add(view)
         }
-        Log.e("width", "" + PaginationAdapter(context).getPixelFromDp(30F, context))
         val dotsParams = LayoutParams(LayoutParams.WRAP_CONTENT, PaginationAdapter(context).getPixelFromDp(30F, context))
         dotsParams.addRule(ALIGN_PARENT_BOTTOM, TRUE)
         dotsParams.addRule(CENTER_HORIZONTAL, TRUE)
@@ -115,7 +110,7 @@ class BannerView(context: Context, var viewPager2: ViewPager2, private var dotGr
     }
 
     private fun loadData() {
-        BannerBiz.getBanners(object: BannerBiz.CallBack {
+        BannerBiz().getBanners(object: BannerBiz.CallBack {
             @SuppressLint("NotifyDataSetChanged")
             override fun onSuccess(bannerList: MutableList<Banner>) {
                 totalPage = bannerList.size

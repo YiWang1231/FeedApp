@@ -11,31 +11,35 @@ import androidx.recyclerview.widget.RecyclerView
 import com.peter.feedapp.CourseActivity
 import com.peter.feedapp.R
 import com.peter.feedapp.bean.Course
+import com.peter.feedapp.databinding.CourseItemBinding
 import com.peter.feedapp.view.RoundCornerImageView
 import com.squareup.picasso.Picasso
 
 class PaginationAdapter(var context: Context): RecyclerView.Adapter<CourseViewHolder>() {
-    var courseList: MutableList<Course> = ArrayList()
+    private var _courseList: MutableList<Course> = mutableListOf()
+    val courseList get() = _courseList
+    private lateinit var binding: CourseItemBinding
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CourseViewHolder{
-        return CourseViewHolder(LayoutInflater.from(context).inflate(R.layout.course_item, parent,false))
+        binding = CourseItemBinding.inflate(LayoutInflater.from(context), parent, false)
+        val view = binding.root
+        return CourseViewHolder(view)
     }
 
     @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: CourseViewHolder, position: Int) {
         val course = courseList[position]
 
-        holder.itemView.setOnClickListener(View.OnClickListener {
+        holder.itemView.setOnClickListener {
             val intent = Intent(context, CourseActivity::class.java)
             intent.putExtra("url", course.link)
             context.startActivity(intent)
-//            Log.e("tag", course.link)
-        })
+        }
 
         // 绑定数据
         holder.courseTitle.text = course.title
 
         holder.courseDesc.text = course.desc
-        if (course.envelopePic.isNotEmpty()) {
+        if (course.envelopePic!!.isNotEmpty()) {
             holder.courseImg.visibility = View.VISIBLE
             Picasso.get().load(course.envelopePic).placeholder(R.drawable.image_placeholder).error(R.drawable.image_placeholder).into(holder.courseImg)
             holder.courseTitle.layoutParams = setMargin(true, holder.courseTitle)
@@ -51,16 +55,15 @@ class PaginationAdapter(var context: Context): RecyclerView.Adapter<CourseViewHo
 
         holder.niceDate.text = course.niceDate
 
-        holder.courseChapter.text = course.superChapterName + "." + course.chapterName
-
-        if (course.tag.isEmpty()) {
+        holder.courseChapter.text = "${course.superChapterName}.${course.chapterName}"
+        if (course.tag!!.isEmpty()) {
             holder.tagCourse.visibility = View.GONE
         } else {
             holder.tagCourse.visibility = View.VISIBLE
             holder.tagCourse.text = course.tag
         }
 
-        if (!course.fresh) {
+        if (!course.fresh!!) {
             holder.tagNew.visibility = View.GONE
             holder.author.layoutParams = setMargin(false, holder.author)
         } else {
@@ -110,9 +113,5 @@ class CourseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     var courseDesc: TextView = itemView.findViewById(R.id.course_desc)
     var topTag: TextView = itemView.findViewById(R.id.top_tag)
     var courseChapter: TextView = itemView.findViewById(R.id.course_chapter)
-
-}
-
-fun main() {
 
 }

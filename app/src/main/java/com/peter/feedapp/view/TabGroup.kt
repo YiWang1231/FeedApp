@@ -1,4 +1,4 @@
-package com.peter.feedapp.bean
+package com.peter.feedapp.view
 
 import android.annotation.SuppressLint
 import android.content.Context

@@ -3,6 +3,7 @@ package com.peter.feedapp.biz
 import android.os.AsyncTask
 import android.util.Log
 import com.peter.feedapp.bean.Course
+import com.peter.feedapp.bean.CourseDataBase
 import com.peter.feedapp.utils.GsonUtils
 import com.peter.feedapp.utils.HttpUtils
 import org.json.JSONArray
@@ -57,15 +58,15 @@ class CourseBiz {
 
         private fun getTopList(): MutableList<Course> {
             Log.e("courseBiz", "top")
-            val content = HttpUtils.newInstance().doGet(TOP_COURSE_LIST_API)
+            val content = HttpUtils.doGet(TOP_COURSE_LIST_API)
             return parseContent(content, true)
         }
 
         private fun getCurrentPageCourseList(page: Int): MutableList<Course> {
             Log.e("courseBiz", "list")
             val courseListApi = "https://www.wanandroid.com/article/list/$page/json"
-            println(courseListApi)
-            val content = HttpUtils.newInstance().doGet(courseListApi)
+            Log.e("API", courseListApi)
+            val content = HttpUtils.doGet(courseListApi)
             return parseContent(content, false)
         }
 

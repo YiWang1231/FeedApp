@@ -1,5 +1,4 @@
 package com.peter.feedapp.bean
-
 import com.google.gson.annotations.Expose
 
 

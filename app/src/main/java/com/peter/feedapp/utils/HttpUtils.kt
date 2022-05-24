@@ -4,7 +4,7 @@ import okhttp3.*
 
 private val mClient = OkHttpClient()
 
-class HttpUtils private constructor(){
+object HttpUtils{
     fun doGet(urlStr: String): String {
         val builder = Request.Builder()
         builder.url(urlStr)
@@ -20,21 +20,6 @@ class HttpUtils private constructor(){
         } catch (e: Exception) {
             println(e)
             return ""
-        }
-    }
-
-    companion object {
-        private var instance: HttpUtils? = null
-            get() {
-                if (field == null) {
-                    field = HttpUtils()
-                }
-                return field
-            }
-
-        @Synchronized
-        fun newInstance(): HttpUtils {
-            return instance!!
         }
     }
 }

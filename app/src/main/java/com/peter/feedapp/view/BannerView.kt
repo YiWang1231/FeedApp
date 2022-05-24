@@ -6,19 +6,29 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.RelativeLayout
+import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.peter.feedapp.R
-import com.peter.feedapp.adapter.BannerAdapter
-import com.peter.feedapp.adapter.ClickListener
 import com.peter.feedapp.adapter.PaginationAdapter
 import com.peter.feedapp.bean.Banner
+import com.peter.feedapp.bean.BannerDataBase
+import com.peter.feedapp.bean.NetDataBase
 import com.peter.feedapp.biz.BannerBiz
+import com.peter.feedapp.biz.Callback
+import com.peter.feedapp.databinding.BannerImgBinding
+import com.peter.feedapp.utils.GsonUtils
+import com.squareup.picasso.Picasso
 
 private const val PAGE_START = 1
 
-class BannerView(context: Context, var viewPager2: ViewPager2, private var dotGroup: ViewGroup?, var clickListener: ClickListener?): RelativeLayout(context){
-    private lateinit var adapter: BannerAdapter
+class BannerView(context: Context, var clickListener: OnBannerClickListener?): RelativeLayout(context){
+    private var adapter: BannerAdapter
+    lateinit var viewPager2: ViewPager2
+        private set
+    var dotGroup: ViewGroup
+        private set
     private var banners: MutableList<Banner> = ArrayList()
     private var currentPage = PAGE_START
     private var totalPage = 0
@@ -31,7 +41,9 @@ class BannerView(context: Context, var viewPager2: ViewPager2, private var dotGr
 
     }
 
-    constructor(context: Context): this(context, ViewPager2(context), null, null)
+    private lateinit var dataBase: BannerDataBase
+
+    constructor(context: Context): this(context, null)
 
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
         val action = ev?.action
@@ -45,18 +57,22 @@ class BannerView(context: Context, var viewPager2: ViewPager2, private var dotGr
         return super.dispatchTouchEvent(ev)
     }
 
-    @SuppressLint("ClickableViewAccessibility")
-    fun init() {
+
+    init {
         // 初始化样式
-        val bannerParams = LayoutParams(LayoutParams.MATCH_PARENT, PaginationAdapter(context).getPixelFromDp(200F, context))
+        viewPager2 = ViewPager2(context)
+        dotGroup = LinearLayout(context)
+        val bannerParams = LayoutParams(LayoutParams.MATCH_PARENT, PaginationAdapter(context).getPixelFromDp(200F))
         this.layoutParams = bannerParams
         viewPager2.layoutParams = bannerParams
         loadData()
-        adapter = BannerAdapter(context, banners, object: ClickListener {
+        adapter = BannerAdapter(context, banners, object: OnBannerClickListener {
             override fun onClick(banner: Banner) {
+                println("点击Banner")
                 clickListener?.onClick(banner)
             }
         })
+
         viewPager2.adapter = adapter
         viewPager2.registerOnPageChangeCallback(object: ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
@@ -93,13 +109,12 @@ class BannerView(context: Context, var viewPager2: ViewPager2, private var dotGr
             val view: ImageView = LayoutInflater.from(context).inflate(R.layout.dot_item, null) as ImageView
             val layoutParams = LayoutParams(60, 60)
             view.layoutParams = layoutParams
-            dotGroup?.addView(view)
+            dotGroup.addView(view)
             dotList.add(view)
         }
-        val dotsParams = LayoutParams(LayoutParams.WRAP_CONTENT, PaginationAdapter(context).getPixelFromDp(30F, context))
+        val dotsParams = LayoutParams(LayoutParams.WRAP_CONTENT, PaginationAdapter(context).getPixelFromDp(30F))
         dotsParams.addRule(ALIGN_PARENT_BOTTOM, TRUE)
         dotsParams.addRule(CENTER_HORIZONTAL, TRUE)
-//        dotsParams.bottomMargin = PaginationAdapter(context).getPixelFromDp(15F, context)
         this.addView(dotGroup, dotsParams)
     }
 
@@ -110,24 +125,71 @@ class BannerView(context: Context, var viewPager2: ViewPager2, private var dotGr
     }
 
     private fun loadData() {
-        BannerBiz().getBanners(object: BannerBiz.CallBack {
+        BannerBiz().getNewBanners(object: Callback<BannerDataBase> {
             @SuppressLint("NotifyDataSetChanged")
-            override fun onSuccess(bannerList: MutableList<Banner>) {
-                totalPage = bannerList.size
+            override fun onSuccess(database: BannerDataBase) {
+                totalPage = database.bannerList.size
                 buildDots()
                 // 第一位添加最后一张
-                banners.add(0, bannerList.last())
+                banners.add(0, database.bannerList.last())
                 // 添加正常数据
-                banners.addAll(bannerList)
+                banners.addAll(database.bannerList)
                 // 最后一位添加第一张
-                banners.add(bannerList.first())
+                banners.add(database.bannerList.first())
+
                 adapter.notifyDataSetChanged()
             }
 
             override fun onFailed(exception: Exception) {
-                return
+
+            }
+
+            override fun parseContent(content: String): BannerDataBase {
+                val bannerList: MutableList<Banner> = ArrayList()
+                val netDataBase: NetDataBase<Banner> =
+                    GsonUtils.gsonProvider.fromJson<NetDataBase<Banner>>(content, NetDataBase::class.java)
+                if (netDataBase.errorCode == 0) {
+                    val dataArray = GsonUtils.newInstance().bean2Json(netDataBase.data)
+                    bannerList.addAll(GsonUtils.newInstance().gson2List(dataArray, Banner::class.java))
+                }
+                dataBase = BannerDataBase(bannerList)
+                return dataBase
             }
 
         })
+    }
+
+    private class BannerAdapter(var context: Context, var bannerList: MutableList<Banner>, var clickListener: OnBannerClickListener): RecyclerView.Adapter<BannerViewHolder>() {
+        private lateinit var binding: BannerImgBinding
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BannerViewHolder {
+            binding = BannerImgBinding.inflate(LayoutInflater.from(context), parent, false)
+            return BannerViewHolder(binding)
+        }
+
+        override fun onBindViewHolder(holder: BannerViewHolder, position: Int) {
+            val banner = bannerList[position]
+            holder.bannerImg.setOnClickListener {
+                clickListener.onClick(banner)
+            }
+            // 绑定数据
+            Picasso.get()
+                .load(banner.imagePath)
+                .placeholder(R.drawable.image_placeholder)
+                .error(R.drawable.image_placeholder)
+                .into(holder.bannerImg)
+        }
+
+        override fun getItemCount(): Int {
+            return bannerList.size
+        }
+
+    }
+
+    private class BannerViewHolder(private val binding: BannerImgBinding): RecyclerView.ViewHolder(binding.root) {
+        var bannerImg: ImageView = binding.bannerImg
+    }
+
+    interface OnBannerClickListener{
+        fun  onClick(banner:Banner)
     }
 }

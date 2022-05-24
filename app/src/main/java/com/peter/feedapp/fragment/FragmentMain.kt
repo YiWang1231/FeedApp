@@ -73,7 +73,7 @@ class FragmentMain : Fragment() {
             override fun onSuccess(courseList: MutableList<Course>, totalPages: Int) {
                 // 请求成功页数 + 1
                 currentPage += 1
-                paginationAdapter.courseList.addAll(courseList)
+                paginationAdapter.addCourses(courseList)
                 if (courseTotalPages == 0) {
                     courseTotalPages = totalPages
                 }

@@ -3,6 +3,7 @@ package com.peter.feedapp.adapter
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.content.res.Resources
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,12 +18,11 @@ import com.squareup.picasso.Picasso
 
 class PaginationAdapter(var context: Context): RecyclerView.Adapter<CourseViewHolder>() {
     private var _courseList: MutableList<Course> = mutableListOf()
-    val courseList get() = _courseList
+    val courseList:List<Course> get() = _courseList
     private lateinit var binding: CourseItemBinding
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CourseViewHolder{
         binding = CourseItemBinding.inflate(LayoutInflater.from(context), parent, false)
-        val view = binding.root
-        return CourseViewHolder(view)
+        return CourseViewHolder(binding)
     }
 
     @SuppressLint("SetTextI18n")
@@ -39,7 +39,7 @@ class PaginationAdapter(var context: Context): RecyclerView.Adapter<CourseViewHo
         holder.courseTitle.text = course.title
 
         holder.courseDesc.text = course.desc
-        if (course.envelopePic!!.isNotEmpty()) {
+        if (course.envelopePic?.isNotEmpty() == true) {
             holder.courseImg.visibility = View.VISIBLE
             Picasso.get().load(course.envelopePic).placeholder(R.drawable.image_placeholder).error(R.drawable.image_placeholder).into(holder.courseImg)
             holder.courseTitle.layoutParams = setMargin(true, holder.courseTitle)
@@ -56,14 +56,14 @@ class PaginationAdapter(var context: Context): RecyclerView.Adapter<CourseViewHo
         holder.niceDate.text = course.niceDate
 
         holder.courseChapter.text = "${course.superChapterName}.${course.chapterName}"
-        if (course.tag!!.isEmpty()) {
+        if (course.tag?.isEmpty() == true) {
             holder.tagCourse.visibility = View.GONE
         } else {
             holder.tagCourse.visibility = View.VISIBLE
             holder.tagCourse.text = course.tag
         }
 
-        if (!course.fresh!!) {
+        if (course.fresh == false) {
             holder.tagNew.visibility = View.GONE
             holder.author.layoutParams = setMargin(false, holder.author)
         } else {
@@ -88,30 +88,34 @@ class PaginationAdapter(var context: Context): RecyclerView.Adapter<CourseViewHo
     private fun setMargin(visible: Boolean, view: View): ViewGroup.MarginLayoutParams{
         val params: ViewGroup.MarginLayoutParams = view.layoutParams as ViewGroup.MarginLayoutParams
         if (visible) {
-            params.marginStart = getPixelFromDp(8F, context)
+            params.marginStart = getPixelFromDp(8F)
         } else {
             params.marginStart = 0
         }
         return params
     }
 
-    fun getPixelFromDp(dpValue: Float, context: Context): Int {
-        val scale: Float = context.resources.displayMetrics.density
+    fun getPixelFromDp(dpValue: Float): Int {
+        val scale: Float = Resources.getSystem().displayMetrics.density
         return (scale * dpValue + 0.5F).toInt()
+    }
+
+    fun addCourses(courses: MutableList<Course>) {
+        _courseList.addAll(courses)
     }
 
 
 }
 
-class CourseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-    var tagNew:TextView = itemView.findViewById(R.id.new_course_tag)
-    var author: TextView = itemView.findViewById(R.id.course_author)
-    var tagCourse: TextView = itemView.findViewById(R.id.course_tag)
-    var niceDate: TextView = itemView.findViewById(R.id.nice_date)
-    var courseImg: RoundCornerImageView = itemView.findViewById(R.id.course_img)
-    var courseTitle: TextView = itemView.findViewById(R.id.course_title)
-    var courseDesc: TextView = itemView.findViewById(R.id.course_desc)
-    var topTag: TextView = itemView.findViewById(R.id.top_tag)
-    var courseChapter: TextView = itemView.findViewById(R.id.course_chapter)
+class CourseViewHolder(private val binding: CourseItemBinding) : RecyclerView.ViewHolder(binding.root) {
+    var tagNew:TextView = binding.newCourseTag
+    var author: TextView = binding.courseAuthor
+    var tagCourse: TextView = binding.courseTag
+    var niceDate: TextView = binding.niceDate
+    var courseImg: RoundCornerImageView = binding.courseImg
+    var courseTitle: TextView = binding.courseTitle
+    var courseDesc: TextView = binding.courseDesc
+    var topTag: TextView = binding.topTag
+    var courseChapter: TextView = binding.courseChapter
 
 }

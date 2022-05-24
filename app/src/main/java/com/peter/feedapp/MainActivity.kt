@@ -2,7 +2,6 @@ package com.peter.feedapp
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import androidx.viewpager.widget.ViewPager.OnPageChangeListener
 import com.peter.feedapp.adapter.FragmentAdapter
 import com.peter.feedapp.view.TabGroup
@@ -13,7 +12,8 @@ import com.peter.feedapp.view.PageEnum
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var tabGroup: TabGroup
-    private  var fragments: MutableList<Lazy<Fragment>> = ArrayList()
+    private  var fragments = PageEnum.values().map { it.fragmentLazy }
+    private val pageEnumValues = PageEnum.values()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,8 +69,8 @@ class MainActivity : AppCompatActivity() {
     private fun initPages() {
         tabGroup = TabGroup(this)
         tabGroup.group = binding.pageNavi
-        PageEnum.values().forEach {
-            fragments.add(it.fragmentLazy)
+        pageEnumValues.forEach {
+//            fragments.add(it.fragmentLazy)
             val tabItem = TabItem(it.titleId, it.iconId)
             tabGroup.addTabItem(tabItem)
         }
@@ -83,7 +83,7 @@ class MainActivity : AppCompatActivity() {
         for ((index, tabItem) in tabGroup.tabList.withIndex()) {
             tabItem.setOnClickListener {
                 tabGroup.selectTab(index)
-                binding.pageTitle.text = getString(PageEnum.values()[index].titleId)
+                binding.pageTitle.text = getString(pageEnumValues[index].titleId)
                 binding.containerContent.setCurrentItem(index, true)
             }
         }

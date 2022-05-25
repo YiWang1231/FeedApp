@@ -14,16 +14,12 @@ import com.peter.feedapp.R
 import com.peter.feedapp.adapter.PaginationAdapter
 import com.peter.feedapp.bean.Banner
 import com.peter.feedapp.bean.BannerDataBase
-import com.peter.feedapp.bean.NetDataBase
-import com.peter.feedapp.biz.BannerBiz
-import com.peter.feedapp.biz.Callback
 import com.peter.feedapp.databinding.BannerImgBinding
-import com.peter.feedapp.utils.GsonUtils
 import com.squareup.picasso.Picasso
 
 private const val PAGE_START = 1
 
-class BannerView(context: Context, var clickListener: OnBannerClickListener?): RelativeLayout(context){
+class BannerView(context: Context, private var bannerDataBase: BannerDataBase, var clickListener: OnBannerClickListener?): RelativeLayout(context){
     private var adapter: BannerAdapter
     lateinit var viewPager2: ViewPager2
         private set
@@ -41,9 +37,7 @@ class BannerView(context: Context, var clickListener: OnBannerClickListener?): R
 
     }
 
-    private lateinit var dataBase: BannerDataBase
-
-    constructor(context: Context): this(context, null)
+    constructor(context: Context): this(context, BannerDataBase(ArrayList()), null)
 
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
         val action = ev?.action
@@ -65,7 +59,7 @@ class BannerView(context: Context, var clickListener: OnBannerClickListener?): R
         val bannerParams = LayoutParams(LayoutParams.MATCH_PARENT, PaginationAdapter(context).getPixelFromDp(200F))
         this.layoutParams = bannerParams
         viewPager2.layoutParams = bannerParams
-        loadData()
+        initData()
         adapter = BannerAdapter(context, banners, object: OnBannerClickListener {
             override fun onClick(banner: Banner) {
                 println("点击Banner")
@@ -98,9 +92,22 @@ class BannerView(context: Context, var clickListener: OnBannerClickListener?): R
             }
 
         })
-        this.addView(viewPager2)
         // 自动滑动
         viewPager2.postDelayed(mLooper, 5000)
+        this.addView(viewPager2)
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    private fun initData() {
+        totalPage = bannerDataBase.bannerList.size
+        buildDots()
+        // 第一位添加最后一张
+        banners.add(0, bannerDataBase.bannerList.last())
+        // 添加正常数据
+        banners.addAll(bannerDataBase.bannerList)
+        // 最后一位添加第一张
+        banners.add(bannerDataBase.bannerList.first())
+
     }
 
     @SuppressLint("InflateParams")
@@ -122,41 +129,6 @@ class BannerView(context: Context, var clickListener: OnBannerClickListener?): R
         for ((index, dot) in dotList.withIndex()) {
             dot.isSelected = index == int
         }
-    }
-
-    private fun loadData() {
-        BannerBiz().getNewBanners(object: Callback<BannerDataBase> {
-            @SuppressLint("NotifyDataSetChanged")
-            override fun onSuccess(database: BannerDataBase) {
-                totalPage = database.bannerList.size
-                buildDots()
-                // 第一位添加最后一张
-                banners.add(0, database.bannerList.last())
-                // 添加正常数据
-                banners.addAll(database.bannerList)
-                // 最后一位添加第一张
-                banners.add(database.bannerList.first())
-
-                adapter.notifyDataSetChanged()
-            }
-
-            override fun onFailed(exception: Exception) {
-
-            }
-
-            override fun parseContent(content: String): BannerDataBase {
-                val bannerList: MutableList<Banner> = ArrayList()
-                val netDataBase: NetDataBase<Banner> =
-                    GsonUtils.gsonProvider.fromJson<NetDataBase<Banner>>(content, NetDataBase::class.java)
-                if (netDataBase.errorCode == 0) {
-                    val dataArray = GsonUtils.newInstance().bean2Json(netDataBase.data)
-                    bannerList.addAll(GsonUtils.newInstance().gson2List(dataArray, Banner::class.java))
-                }
-                dataBase = BannerDataBase(bannerList)
-                return dataBase
-            }
-
-        })
     }
 
     private class BannerAdapter(var context: Context, var bannerList: MutableList<Banner>, var clickListener: OnBannerClickListener): RecyclerView.Adapter<BannerViewHolder>() {

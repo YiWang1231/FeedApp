@@ -1,6 +1,9 @@
 package com.peter.feedapp.biz
 
 import android.os.AsyncTask
+import com.google.gson.reflect.TypeToken
+import com.peter.feedapp.bean.NetDataBase
+import com.peter.feedapp.utils.GsonUtils
 import com.peter.feedapp.utils.HttpUtils
 
 class DataDownloadTask<T>(private val callback: Callback<T>): AsyncTask<String, Void, T>(){

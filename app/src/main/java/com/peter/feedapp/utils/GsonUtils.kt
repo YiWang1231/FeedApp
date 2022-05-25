@@ -3,9 +3,9 @@ package com.peter.feedapp.utils
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonParser
+import com.google.gson.reflect.TypeToken
 
 class GsonUtils private constructor(){
-
     /**
      * Bean转gson
      */
@@ -53,6 +53,11 @@ class GsonUtils private constructor(){
             return instance!!
         }
     }
+}
 
-
+fun main() {
+    fun<T> getType(str: String): T {
+        val typeToken = object : TypeToken<T>() {}.type
+        return GsonUtils.gsonProvider.fromJson(str, typeToken)
+    }
 }

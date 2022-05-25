@@ -12,6 +12,10 @@ class CourseActivity : AppCompatActivity() {
         val view = binding.root
         setContentView(view)
         val url = intent.getStringExtra("url")
-        binding.web.loadUrl(url!!)
+        if (url != null) {
+            binding.web.loadUrl(url)
+        } else {
+            finish()
+        }
     }
 }

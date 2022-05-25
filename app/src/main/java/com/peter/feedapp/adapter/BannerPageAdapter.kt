@@ -10,17 +10,9 @@ import com.peter.feedapp.CourseActivity
 import com.peter.feedapp.bean.Banner
 import com.peter.feedapp.view.BannerView
 
-class BannerPageAdapter(var context: Context): RecyclerView.Adapter<BannerPageViewHolder>() {
-    private lateinit var bannerView: BannerView
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BannerPageViewHolder {
-        bannerView = BannerView(context, object: BannerView.OnBannerClickListener {
-            override fun onClick(banner: Banner) {
-                val intent = Intent(context, CourseActivity::class.java)
-                intent.putExtra("url", banner.url)
-                context.startActivity(intent)
-            }
+class BannerPageAdapter(private val bannerView: BannerView): RecyclerView.Adapter<BannerPageViewHolder>() {
 
-        })
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BannerPageViewHolder {
 
         return BannerPageViewHolder(bannerView)
     }

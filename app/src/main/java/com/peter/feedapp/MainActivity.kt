@@ -53,7 +53,7 @@ class MainActivity : AppCompatActivity() {
 
             override fun onPageSelected(position: Int) {
                 tabGroup.selectTab(position)
-                binding.pageTitle.text = getString(PageEnum.values()[position].titleId)
+                binding.pageTitle.text = getString(pageEnumValues[position].titleId)
             }
 
             override fun onPageScrollStateChanged(state: Int) {

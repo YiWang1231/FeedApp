@@ -92,15 +92,17 @@ class BannerView(context: Context, private var bannerDataBase: BannerDataBase, v
             }
 
         })
+
         // 自动滑动
-        viewPager2.postDelayed(mLooper, 5000)
         this.addView(viewPager2)
+        // 初始化dots
+        buildDots()
+        viewPager2.postDelayed(mLooper, 5000)
     }
 
     @SuppressLint("NotifyDataSetChanged")
     private fun initData() {
         totalPage = bannerDataBase.bannerList.size
-        buildDots()
         // 第一位添加最后一张
         banners.add(0, bannerDataBase.bannerList.last())
         // 添加正常数据

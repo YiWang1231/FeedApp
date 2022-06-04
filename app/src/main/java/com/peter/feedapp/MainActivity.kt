@@ -12,7 +12,7 @@ import com.peter.feedapp.view.PageEnum
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var tabGroup: TabGroup
-    private  var fragments = PageEnum.values().map { it.fragmentLazy }
+    private  var fragments = PageEnum.values().map { it.fragmentLazy.invoke() }
     private val pageEnumValues = PageEnum.values()
 
     override fun onCreate(savedInstanceState: Bundle?) {

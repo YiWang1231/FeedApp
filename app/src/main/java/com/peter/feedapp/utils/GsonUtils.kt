@@ -54,10 +54,3 @@ class GsonUtils private constructor(){
         }
     }
 }
-
-fun main() {
-    fun<T> getType(str: String): T {
-        val typeToken = object : TypeToken<T>() {}.type
-        return GsonUtils.gsonProvider.fromJson(str, typeToken)
-    }
-}

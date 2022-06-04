@@ -13,13 +13,12 @@ import androidx.viewpager2.widget.ViewPager2
 import com.peter.feedapp.R
 import com.peter.feedapp.adapter.PaginationAdapter
 import com.peter.feedapp.bean.Banner
-import com.peter.feedapp.bean.BannerDataBase
 import com.peter.feedapp.databinding.BannerImgBinding
 import com.squareup.picasso.Picasso
 
 private const val PAGE_START = 1
 
-class BannerView(context: Context, private var bannerDataBase: BannerDataBase, var clickListener: OnBannerClickListener?): RelativeLayout(context){
+class BannerView(context: Context, private var bannerList: MutableList<Banner>, var clickListener: OnBannerClickListener?): RelativeLayout(context){
     private var adapter: BannerAdapter
     lateinit var viewPager2: ViewPager2
         private set
@@ -37,7 +36,7 @@ class BannerView(context: Context, private var bannerDataBase: BannerDataBase, v
 
     }
 
-    constructor(context: Context): this(context, BannerDataBase(ArrayList()), null)
+    constructor(context: Context): this(context, ArrayList(), null)
 
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
         val action = ev?.action
@@ -102,13 +101,13 @@ class BannerView(context: Context, private var bannerDataBase: BannerDataBase, v
 
     @SuppressLint("NotifyDataSetChanged")
     private fun initData() {
-        totalPage = bannerDataBase.bannerList.size
+        totalPage = bannerList.size
         // 第一位添加最后一张
-        banners.add(0, bannerDataBase.bannerList.last())
+        banners.add(0, bannerList.last())
         // 添加正常数据
-        banners.addAll(bannerDataBase.bannerList)
+        banners.addAll(bannerList)
         // 最后一位添加第一张
-        banners.add(bannerDataBase.bannerList.first())
+        banners.add(bannerList.first())
 
     }
 

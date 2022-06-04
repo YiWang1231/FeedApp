@@ -56,11 +56,11 @@ class PaginationAdapter(var context: Context): RecyclerView.Adapter<CourseViewHo
         holder.niceDate.text = course.niceDate
 
         holder.courseChapter.text = "${course.superChapterName}.${course.chapterName}"
-        if (course.tag?.isEmpty() == true) {
+        if (course.showTag?.isEmpty() == true) {
             holder.tagCourse.visibility = View.GONE
         } else {
             holder.tagCourse.visibility = View.VISIBLE
-            holder.tagCourse.text = course.tag
+            holder.tagCourse.text = course.showTag
         }
 
         if (course.fresh == false) {

@@ -1,7 +1,5 @@
 package com.peter.feedapp.bean
 
-
-
 data class Course(var id: Int?,
                   var title: String?,
                   var desc: String?,

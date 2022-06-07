@@ -51,18 +51,42 @@ class FragmentMain : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+//        val
         // Inflate the layout for this fragment
         _binding = FragmentMainBinding.inflate(inflater, container, false)
         val view = binding.root
         // 初始化
         handler = MyHandler(WeakReference(this))
+        bannerView = BannerView(requireContext(), object : BannerView.OnBannerClickListener {
+            override fun onClick(banner: Banner) {
+                val intent = Intent(requireContext(), CourseActivity::class.java)
+                intent.putExtra("url", banner.url)
+                requireContext().startActivity(intent)
+            }
+
+        })
         paginationAdapter = PaginationAdapter(requireContext())
         linearLayoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
         binding.articleList.layoutManager = linearLayoutManager
+        // 配置adapter
+        bannerPageAdapter = BannerPageAdapter(bannerView)
+        binding.articleList.adapter = ConcatAdapter(
+            bannerPageAdapter,
+            paginationAdapter
+        )
+
+        binding.articleList.addOnScrollListener(object: PaginationScrollListener(linearLayoutManager) {
+            override fun onScrollToBottom() {
+                if (!isLastPage) {
+                    println("加载新数据了")
+                    loadCourse()
+                }
+            }
+        })
         // 获取课程数据
-        loadTopListCourse()
+        loadFirstPageCourse()
         // 获取banner数据
-        initBannerView()
+        loadBanners()
         // 为recycleView绑定adapter
         return view
     }
@@ -73,12 +97,11 @@ class FragmentMain : Fragment() {
         _binding = null
     }
 
-    private fun loadTopListCourse() {
+    private fun loadFirstPageCourse() {
         val courseList: MutableList<Course> = ArrayList()
         HttpUtils.get().url(TOP_COURSE_LIST_API).build().enqueue(HttpUtils.classOf(), object : JsonDataBaseCallback<JsonArrayBase<Course>> {
             override fun onSuccess(database: JsonArrayBase<Course>) {
                 if (database.errorCode == 0) {
-                    println("top")
                     courseList.addAll(CourseBiz.parseCourseContent(database))
                     paginationAdapter.addCourses(courseList)
                     loadCourse()
@@ -116,7 +139,7 @@ class FragmentMain : Fragment() {
         })
     }
 
-    private fun initBannerView() {
+    private fun loadBanners() {
         val bannerList: MutableList<Banner> = ArrayList()
         HttpUtils.get().url(BANNER_API).build().enqueue(HttpUtils.classOf(), object : JsonDataBaseCallback<JsonArrayBase<Banner>> {
             override fun onSuccess(database: JsonArrayBase<Banner>) {
@@ -124,16 +147,8 @@ class FragmentMain : Fragment() {
                     val bannerListJson = GsonUtils.newInstance().bean2Json(database.data)
                     bannerList.addAll(GsonUtils.newInstance().gson2List(bannerListJson, Banner::class.java))
                 }
-                bannerView = BannerView(requireContext(), bannerList, object : BannerView.OnBannerClickListener {
-                    override fun onClick(banner: Banner) {
-                        val intent = Intent(requireContext(), CourseActivity::class.java)
-                        intent.putExtra("url", banner.url)
-                        requireContext().startActivity(intent)
-                    }
-
-                })
+                bannerView.addBanners(bannerList)
                 val message: Message = Message.obtain()
-                message.obj = bannerView
                 message.what = BANNER_VIEW_IS_READY
                 handler.sendMessage(message)
             }
@@ -152,21 +167,7 @@ class FragmentMain : Fragment() {
             weakActivity.get()?.run {
                 when (msg.what) {
                     BANNER_VIEW_IS_READY -> {
-                        // 配置adapter
-                        bannerPageAdapter = BannerPageAdapter(bannerView)
-                        binding.articleList.adapter = ConcatAdapter(
-                            bannerPageAdapter,
-                            paginationAdapter
-                        )
-
-                        binding.articleList.addOnScrollListener(object: PaginationScrollListener(linearLayoutManager) {
-                            override fun onScrollToBottom() {
-                                if (!isLastPage) {
-                                    println("加载新数据了")
-                                    loadCourse()
-                                }
-                            }
-                        })
+                        bannerView.initView()
                     }
                     COURSE_LIST_IS_READY -> paginationAdapter.notifyDataSetChanged()
                 }

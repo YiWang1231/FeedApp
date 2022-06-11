@@ -13,9 +13,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.peter.feedapp.CourseActivity
-import com.peter.feedapp.adapter.BannerPageAdapter
-import com.peter.feedapp.adapter.PaginationAdapter
-import com.peter.feedapp.adapter.PaginationScrollListener
+import com.peter.feedapp.adapter.*
 import com.peter.feedapp.bean.*
 import com.peter.feedapp.biz.CourseBiz
 import com.peter.feedapp.databinding.FragmentMainBinding
@@ -31,6 +29,7 @@ private const val BANNER_API = "https://www.wanandroid.com/banner/json"
 private const val TOP_COURSE_LIST_API = "https://www.wanandroid.com/article/top/json"
 private const val BANNER_VIEW_IS_READY = 3000000
 private const val COURSE_LIST_IS_READY = 5000000
+private const val LOADING_VISIBLE_CHANGED = 900000
 
 class FragmentMain : Fragment() {
     private var _binding: FragmentMainBinding? = null
@@ -38,6 +37,7 @@ class FragmentMain : Fragment() {
     private lateinit var linearLayoutManager: LinearLayoutManager
     private lateinit var paginationAdapter: PaginationAdapter
     private lateinit var bannerPageAdapter: BannerPageAdapter
+    private lateinit var loadingAdapter: LoadingAdapter
     private lateinit var bannerView: BannerView
     // 当前页面
     private var currentPage = PAGE_START
@@ -65,6 +65,7 @@ class FragmentMain : Fragment() {
             }
 
         })
+        loadingAdapter = LoadingAdapter(requireContext())
         paginationAdapter = PaginationAdapter(requireContext())
         linearLayoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
         binding.articleList.layoutManager = linearLayoutManager
@@ -72,22 +73,23 @@ class FragmentMain : Fragment() {
         bannerPageAdapter = BannerPageAdapter(bannerView)
         binding.articleList.adapter = ConcatAdapter(
             bannerPageAdapter,
-            paginationAdapter
+            paginationAdapter,
+            loadingAdapter
         )
-
-        binding.articleList.addOnScrollListener(object: PaginationScrollListener(linearLayoutManager) {
-            override fun onScrollToBottom() {
-                if (!isLastPage) {
-                    println("加载新数据了")
-                    loadCourse()
-                }
-            }
-        })
         // 获取课程数据
         loadFirstPageCourse()
         // 获取banner数据
         loadBanners()
-        // 为recycleView绑定adapter
+        // 为recycleView绑定滚动监听器
+        binding.articleList.addOnScrollListener(object: PaginationScrollListener(linearLayoutManager) {
+            override fun onScrollToBottom() {
+                if (!isLastPage && currentPage != 0) {
+                    loadCourse()
+                } else if (isLastPage) {
+                    loadingAdapter.setLoadingStatus(LoadingStatusEnum.STATUS_FINISHED.statusCode, null)
+                }
+            }
+        })
         return view
     }
 
@@ -99,10 +101,11 @@ class FragmentMain : Fragment() {
 
     private fun loadFirstPageCourse() {
         val courseList: MutableList<Course> = ArrayList()
-        HttpUtils.get().url(TOP_COURSE_LIST_API).build().enqueue(HttpUtils.classOf(), object : JsonDataBaseCallback<JsonArrayBase<Course>> {
-            override fun onSuccess(database: JsonArrayBase<Course>) {
-                if (database.errorCode == 0) {
-                    courseList.addAll(CourseBiz.parseCourseContent(database))
+        HttpUtils.get().url(TOP_COURSE_LIST_API).build().enqueue(object : JsonDataBaseCallback {
+            override fun onSuccess(result: String) {
+                val jsonArrayBase = GsonUtils.newInstance().fromJsonArray(result, Course::class.java)
+                if (jsonArrayBase.errorCode == 0) {
+                    courseList.addAll(CourseBiz.parseCourseContent(jsonArrayBase))
                     paginationAdapter.addCourses(courseList)
                     loadCourse()
                 }
@@ -118,22 +121,36 @@ class FragmentMain : Fragment() {
     private fun loadCourse() {
         val courseList: MutableList<Course> = ArrayList()
         val courseListApi = "https://www.wanandroid.com/article/list/$currentPage/json"
-        HttpUtils.get().url(courseListApi).build().enqueue(HttpUtils.classOf(), object : JsonDataBaseCallback<JsonObjectBase> {
-            override fun onSuccess(database: JsonObjectBase) {
+        HttpUtils.get().url(courseListApi).build().enqueue(object : JsonDataBaseCallback {
+            override fun onSuccess(result: String) {
+                loadingAdapter.setLoadingShowState(true)
+                loadingAdapter.setLoadingStatus(LoadingStatusEnum.STATUS_LOADING.statusCode, null)
+                val messageLoad: Message = Message.obtain()
+                messageLoad.what = LOADING_VISIBLE_CHANGED
+                handler.sendMessage(messageLoad)
+                val database = GsonUtils.newInstance().gson2Bean(result, JsonObjectBase::class.java)
                 if (database.errorCode == 0) {
-                    currentPage += 1
-                    val jsonArrayBase = GsonUtils.newInstance().gson2Bean<JsonArrayBase<Course>>(database.data.toString(), HttpUtils.classOf())
+                    val jsonArrayBase = GsonUtils.newInstance().fromJsonArray(database.data.toString(), Course::class.java)
                     courseTotalPages = jsonArrayBase.pageCount
+                    if (currentPage < courseTotalPages) {
+                        currentPage += 1
+                    } else {
+                        isLastPage = true
+                    }
                     courseList.addAll(CourseBiz.parseCourseContent(jsonArrayBase))
                     paginationAdapter.addCourses(courseList)
-                    val message = Message.obtain()
-                    message.what = COURSE_LIST_IS_READY
-                    handler.sendMessage(message)
+                    val messageCourse = Message.obtain()
+                    messageCourse.what = COURSE_LIST_IS_READY
+                    handler.sendMessage(messageCourse)
                 }
+//                loadingAdapter.setLoadingShowState(false)
             }
 
             override fun onFailed(exception: Exception, request: Request) {
-                //
+                loadingAdapter.setLoadingStatus(LoadingStatusEnum.STATUS_FAILED.statusCode, null)
+                loadingAdapter.styleView?.setOnClickListener(View.OnClickListener {
+                    loadCourse()
+                })
             }
 
         })
@@ -141,16 +158,16 @@ class FragmentMain : Fragment() {
 
     private fun loadBanners() {
         val bannerList: MutableList<Banner> = ArrayList()
-        HttpUtils.get().url(BANNER_API).build().enqueue(HttpUtils.classOf(), object : JsonDataBaseCallback<JsonArrayBase<Banner>> {
-            override fun onSuccess(database: JsonArrayBase<Banner>) {
-                if (database.errorCode == 0) {
-                    val bannerListJson = GsonUtils.newInstance().bean2Json(database.data)
-                    bannerList.addAll(GsonUtils.newInstance().gson2List(bannerListJson, Banner::class.java))
+        HttpUtils.get().url(BANNER_API).build().enqueue(object : JsonDataBaseCallback {
+            override fun onSuccess(result: String) {
+                val jsonArrayBase = GsonUtils.newInstance().fromJsonArray(result, Banner::class.java)
+                if (jsonArrayBase.errorCode == 0) {
+                    bannerList.addAll(jsonArrayBase.data)
                 }
                 bannerView.addBanners(bannerList)
-                val message: Message = Message.obtain()
-                message.what = BANNER_VIEW_IS_READY
-                handler.sendMessage(message)
+                val messageBanner: Message = Message.obtain()
+                messageBanner.what = BANNER_VIEW_IS_READY
+                handler.sendMessage(messageBanner)
             }
 
             override fun onFailed(exception: Exception, request: Request) {
@@ -169,7 +186,13 @@ class FragmentMain : Fragment() {
                     BANNER_VIEW_IS_READY -> {
                         bannerView.initView()
                     }
-                    COURSE_LIST_IS_READY -> paginationAdapter.notifyDataSetChanged()
+                    COURSE_LIST_IS_READY -> {
+                        paginationAdapter.notifyDataSetChanged()
+                    }
+                    LOADING_VISIBLE_CHANGED -> {
+                        println("change")
+                        loadingAdapter.notifyDataSetChanged()
+                    }
                 }
             }
         }

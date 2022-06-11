@@ -9,10 +9,10 @@ import org.jsoup.Jsoup
 class CourseBiz {
 
     companion object {
-        fun parseCourseContent(jsonArrayBase: JsonArrayBase<Course>): MutableList<Course> {
+        fun parseCourseContent(jsonArrayBase: JsonArrayBase<List<Course>>): MutableList<Course> {
             val courseList: MutableList<Course> = ArrayList()
-            val dataArray = GsonUtils.newInstance().bean2Json(jsonArrayBase.data)
-            courseList.addAll(GsonUtils.newInstance().gson2List(dataArray, Course::class.java))
+            val dataArray = jsonArrayBase.data
+            courseList.addAll(dataArray)
             for (course in courseList) {
                 // 设置描述
                 if (course.desc?.isNotEmpty() == true) {

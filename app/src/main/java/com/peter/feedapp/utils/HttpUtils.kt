@@ -2,16 +2,13 @@ package com.peter.feedapp.utils
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import com.google.gson.internal.LinkedTreeMap
 import com.google.gson.reflect.TypeToken
-import com.peter.feedapp.bean.Banner
 import com.peter.feedapp.bean.Course
 import com.peter.feedapp.bean.JsonArrayBase
 import com.peter.feedapp.bean.JsonObjectBase
 import okhttp3.*
 import java.io.IOException
 import java.lang.reflect.Type
-import kotlin.reflect.typeOf
 
 private val mClient = OkHttpClient()
 private const val GetMethod = "GET"
@@ -27,27 +24,10 @@ class HttpUtils private constructor(val method: String?, private val builder: Re
     )
 
     companion object {
-        fun doGet(urlStr: String): String {
-            val builder = Request.Builder()
-            builder.url(urlStr)
-            val request = builder.build()
-            val call = mClient.newCall(request)
-            try {
-                val response = call.execute()
-                return if (response.isSuccessful) {
-                    response.body()!!.string()
-                } else {
-                    return ""
-                }
-            } catch (e: Exception) {
-                println(e)
-                return ""
-            }
-        }
 
         inline fun <reified T> classOf() = T::class.java
 
-        inline fun <reified T> typeOf(): Type = object: TypeToken<JsonArrayBase<T>>() {}.type
+        inline fun <reified T> getClass(value: T): Class<T> = T::class.java
 
         fun get(): Builder {
             val builder = Builder()
@@ -62,26 +42,20 @@ class HttpUtils private constructor(val method: String?, private val builder: Re
         }
     }
 
-
-
-
-    fun<T> execute(classOfT: Class<T>, callback: JsonDataBaseCallback<T>){
+    fun execute(callback: JsonDataBaseCallback){
         val request = builder.build()
         val call = request.let { mClient.newCall(it) }
         val res  = call.execute()
         if (res.isSuccessful) {
-            val json = res.body()?.string()
-            val dataBase = json?.let { GsonUtils.newInstance().gson2Bean(it, classOfT) }
-            if (dataBase != null) {
-                callback.onSuccess(dataBase)
-            }
+            val json = res.body()!!.string()
+            callback.onSuccess(json)
         } else {
             val exception = java.lang.Exception("请求失败")
             callback.onFailed(exception, request)
         }
     }
 
-    fun<T> enqueue(classOfT: Class<T>, callback: JsonDataBaseCallback<T>) {
+    fun enqueue(callback: JsonDataBaseCallback) {
         val request = builder.build()
         val call = mClient.newCall(request)
         call.enqueue(object : okhttp3.Callback {
@@ -94,8 +68,7 @@ class HttpUtils private constructor(val method: String?, private val builder: Re
             override fun onResponse(call: Call, response: Response) {
                 if (response.isSuccessful) {
                     val json = response.body()!!.string()
-                    val dataBase = GsonUtils.newInstance().gson2Bean(json, classOfT)
-                    callback.onSuccess(dataBase)
+                    callback.onSuccess(json)
                 } else {
                     val exception = java.lang.Exception(response.code().toString())
                     callback.onFailed(exception, request)
@@ -154,13 +127,12 @@ class HttpUtils private constructor(val method: String?, private val builder: Re
                 }
             }
             tempUrl?.let { this.builder.url(it) }
-            println(tempUrl)
             return HttpUtils(this)
         }
     }
 }
 
-interface JsonDataBaseCallback<T> {
-    fun onSuccess(database: T)
+interface JsonDataBaseCallback {
+    fun onSuccess(result: String)
     fun onFailed(exception: Exception, request: Request)
 }

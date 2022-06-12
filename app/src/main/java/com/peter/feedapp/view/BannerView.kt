@@ -89,7 +89,7 @@ class BannerView(context: Context, var clickListener: OnBannerClickListener?): R
         adapter.notifyDataSetChanged()
     }
 
-    fun addBanners(banners: MutableList<Banner>) {
+    fun addBanners(banners: List<Banner>) {
         _bannerList.addAll(banners)
         initBanner()
     }

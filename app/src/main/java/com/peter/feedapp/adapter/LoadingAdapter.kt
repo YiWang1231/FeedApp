@@ -1,103 +1,85 @@
 package com.peter.feedapp.adapter
 
 import android.content.Context
-import android.view.Gravity
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.annotation.LayoutRes
 import androidx.recyclerview.widget.RecyclerView
 import com.peter.feedapp.R
+import com.peter.feedapp.adapter.LoadingStatusEnum
 
-class LoadingAdapter(val context: Context) : RecyclerView.Adapter<LoadingAdapter.LoadingViewHolder>(){
-    private val layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, PaginationAdapter(context).getPixelFromDp(80F))
-    private var loadingStyle: ProgressBar? = null
-    private var loadFailedStyle: TextView? = null
-    private var loadFinishedStyle: TextView? = null
-    private var isShowLoading = false
-    var styleView: View? = null
-    private set
+class LoadingAdapter(val context: Context) : RecyclerView.Adapter<LoadingAdapter.BaseViewHolder>(){
+    @LayoutRes
+    var loadingStyleResId = R.layout.loading_more
+    @LayoutRes
+    var loadingFailedResId = R.layout.load_more_failed
+    @LayoutRes
+    var loadingFinishedResId = R.layout.loading_no_more
+
+    private var loadingState = LoadingStatusEnum.STATUS_LOADING.statusCode
 
     private var statusType = LoadingStatusEnum.STATUS_LOADING.statusCode
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LoadingViewHolder{
-        setLoadingStatus(statusType, null)
-        when(isShowLoading) {
-            true -> styleView?.visibility = View.VISIBLE
-            false -> styleView?.visibility = View.GONE
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder{
+        return when(loadingState) {
+            LoadingStatusEnum.STATUS_FAILED.statusCode -> createLoadFailedHolder(parent)
+            LoadingStatusEnum.STATUS_FINISHED.statusCode -> createLoadingFinished(parent)
+            LoadingStatusEnum.EMPTY_VIEW.statusCode -> createEmptyHolder()
+            else -> createLoadMoreHolder(parent)
         }
-        println("again")
-        return LoadingViewHolder(styleView!!)
     }
-
-
 
     override fun getItemCount(): Int {
         return 1
     }
 
-    override fun onBindViewHolder(holder: LoadingViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
         //
     }
 
-
-
-    fun setLoadingStatus(loadingStatus: Int, view: View?) {
-        println("setState")
-        statusType = loadingStatus
-        if (view != null) {
-            styleView = view
-        } else {
-            layoutParams.gravity = Gravity.CENTER
-            styleView = when(statusType) {
-                LoadingStatusEnum.STATUS_FINISHED.statusCode -> {
-                    initLoadFinished()
-                    loadFinishedStyle
-                }
-                LoadingStatusEnum.STATUS_FAILED.statusCode -> {
-                    initLoadFailed()
-                    loadFailedStyle
-                }
-                else -> {
-                    initLoadingBar()
-                    loadingStyle
-                }
-            }
-        }
+    fun setState(state: Int) {
+        this.loadingState = state
     }
 
-    fun setLoadingShowState(isShow: Boolean) {
-        isShowLoading = isShow
+    private fun createLoadMoreHolder(parent: ViewGroup): LoadingMoreViewHolder {
+        val view = LayoutInflater.from(context).inflate(loadingStyleResId, parent, false)
+        return LoadingMoreViewHolder(view)
     }
 
-    private fun initLoadingBar() {
-        if (loadingStyle == null) {
-            loadingStyle = ProgressBar(context)
-            loadingStyle!!.layoutParams =layoutParams
-        } else {
-            return
-        }
+    private fun createLoadFailedHolder(parent: ViewGroup): LoadingFailedViewHolder {
+        val view = LayoutInflater.from(context).inflate(loadingFailedResId, parent, false)
+        return LoadingFailedViewHolder(view)
     }
 
-    private fun initLoadFailed() {
-        if (loadFailedStyle == null) {
-            loadFailedStyle = TextView(context)
-            loadFailedStyle!!.layoutParams = layoutParams
-            loadFailedStyle!!.text = context.getString(R.string.loading_failed)
-        } else {
-            return
-        }
+    private fun createLoadingFinished(parent: ViewGroup): LoadingFinishedViewHolder {
+        val view = LayoutInflater.from(context).inflate(loadingFinishedResId, parent, false)
+        return LoadingFinishedViewHolder(view)
     }
 
-    private fun initLoadFinished() {
-        if (loadFinishedStyle == null) {
-            loadFinishedStyle = TextView(context)
-            loadFinishedStyle!!.layoutParams = layoutParams
-            loadFinishedStyle!!.text = context.getString(R.string.loading_finished)
-        } else {
-            return
-        }
+    private fun createEmptyHolder():EmptyViewHolder {
+        val view = LinearLayout(context)
+        val layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0)
+        return EmptyViewHolder(view)
     }
 
-    class LoadingViewHolder(view: View): RecyclerView.ViewHolder(view)
+    open class BaseViewHolder(view: View): RecyclerView.ViewHolder(view) {
+        var viewType = LoadingStatusEnum.STATUS_LOADING.statusCode
+    }
+
+    class LoadingMoreViewHolder(view: View): BaseViewHolder(view) {
+        lateinit var progressBar: ProgressBar
+    }
+
+    class LoadingFailedViewHolder(view: View): BaseViewHolder(view) {
+        lateinit var textView: TextView
+    }
+
+    class LoadingFinishedViewHolder(view: View): BaseViewHolder(view) {
+        lateinit var textView: TextView
+    }
+
+    class EmptyViewHolder(view: View): BaseViewHolder(view)
 }

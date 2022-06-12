@@ -24,7 +24,9 @@
         <entry key="app/src/main/res/layout/fragment_me.xml" value="0.26766304347826086" />
         <entry key="app/src/main/res/layout/fragment_question.xml" value="0.26766304347826086" />
         <entry key="app/src/main/res/layout/fragment_system.xml" value="0.26766304347826086" />
+        <entry key="app/src/main/res/layout/load_more_failed.xml" value="0.5" />
         <entry key="app/src/main/res/layout/loading.xml" value="0.25" />
+        <entry key="app/src/main/res/layout/loading_no_more.xml" value="0.33" />
         <entry key="app/src/main/res/layout/tab_item.xml" value="0.6503074928566261" />
       </map>
     </option>

@@ -1,3 +1,8 @@
 package com.peter.feedapp.bean
 
-data class CourseDataBase(val courseList: MutableList<Course>, var totalPages: Int)
+data class CourseDataBase(
+    val datas: MutableList<Course>?,
+    val curPage: Int?,
+    val pageCount: Int?,
+    val total: Int?
+)

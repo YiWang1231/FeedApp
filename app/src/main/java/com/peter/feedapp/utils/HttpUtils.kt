@@ -1,16 +1,16 @@
 package com.peter.feedapp.utils
 
-import com.google.gson.JsonArray
+import android.os.Handler
+import android.os.Looper
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
-import com.peter.feedapp.bean.Course
-import com.peter.feedapp.bean.JsonArrayBase
-import com.peter.feedapp.bean.JsonObjectBase
+import com.peter.feedapp.bean.ApiResponse
 import okhttp3.*
 import java.io.IOException
 import java.lang.reflect.Type
 
 private val mClient = OkHttpClient()
+private val mainHandler = Handler(Looper.getMainLooper())
 private const val GetMethod = "GET"
 private const val PostMethod = "POST"
 
@@ -25,7 +25,7 @@ class HttpUtils private constructor(val method: String?, private val builder: Re
 
     companion object {
 
-        inline fun <reified T> classOf() = T::class.java
+        inline fun <reified T> typeToken() = object : TypeToken<T>(){}.type
 
         inline fun <reified T> getClass(value: T): Class<T> = T::class.java
 
@@ -53,6 +53,35 @@ class HttpUtils private constructor(val method: String?, private val builder: Re
             val exception = java.lang.Exception("请求失败")
             callback.onFailed(exception, request)
         }
+    }
+
+    fun <T> enqueue(returnType: Type, callback: HttpCallback<T>) {
+        val request = builder.build()
+        val call = mClient.newCall(request)
+        call.enqueue(object : okhttp3.Callback {
+
+            override fun onFailure(call: Call, e: IOException) {
+                val exception = java.lang.Exception("请求失败")
+                mainHandler.post{
+                    callback.onFailed(exception)
+                }
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                if (response.isSuccessful) {
+                    val json = response.body()!!.string()
+                    val ret: T = GsonUtils.gsonProvider.fromJson(json, returnType)
+                    mainHandler.post {
+                        callback.onSuccess(ret)
+                    }
+                } else {
+                    mainHandler.post{
+                        val exception = java.lang.Exception(response.code().toString())
+                        callback.onFailed(exception)
+                    }
+                }
+            }
+        })
     }
 
     fun enqueue(callback: JsonDataBaseCallback) {
@@ -135,4 +164,21 @@ class HttpUtils private constructor(val method: String?, private val builder: Re
 interface JsonDataBaseCallback {
     fun onSuccess(result: String)
     fun onFailed(exception: Exception, request: Request)
+}
+interface HttpCallback<T> {
+    fun onSuccess(result: T)
+    fun onFailed(exception: Exception)
+}
+
+abstract class ApiCallback<T>: HttpCallback<ApiResponse<T>> {
+
+    abstract fun onReqSuccess(ret: T)
+
+    override fun onSuccess(result: ApiResponse<T>) {
+        if (result.errorCode == 0 && result.data != null) {
+            onReqSuccess(result.data)
+        } else {
+            onFailed(java.lang.Exception(result.errorMsg))
+        }
+    }
 }

@@ -10,21 +10,17 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.peter.feedapp.CourseActivity
-import com.peter.feedapp.adapter.BannerPageAdapter
-import com.peter.feedapp.adapter.PaginationAdapter
-import com.peter.feedapp.adapter.PaginationScrollListener
-import com.peter.feedapp.bean.Banner
-import com.peter.feedapp.bean.BannerDataBase
-import com.peter.feedapp.bean.Course
-import com.peter.feedapp.bean.NetDataBase
-import com.peter.feedapp.biz.BannerBiz
-import com.peter.feedapp.biz.Callback
+import com.peter.feedapp.adapter.*
+import com.peter.feedapp.bean.*
 import com.peter.feedapp.biz.CourseBiz
 import com.peter.feedapp.databinding.FragmentMainBinding
-import com.peter.feedapp.utils.GsonUtils
+import com.peter.feedapp.utils.ApiCallback
+import com.peter.feedapp.utils.HttpUtils
 import com.peter.feedapp.view.BannerView
 
 private const val PAGE_START = 0
+private const val BANNER_API = "https://www.wanandroid.com/banner/json"
+private const val TOP_COURSE_LIST_API = "https://www.wanandroid.com/article/top/json"
 
 class FragmentMain : Fragment() {
     private var _binding: FragmentMainBinding? = null
@@ -32,7 +28,7 @@ class FragmentMain : Fragment() {
     private lateinit var linearLayoutManager: LinearLayoutManager
     private lateinit var paginationAdapter: PaginationAdapter
     private lateinit var bannerPageAdapter: BannerPageAdapter
-    private lateinit var bannerDataBase: BannerDataBase
+    private lateinit var loadingAdapter: LoadingAdapter
     private lateinit var bannerView: BannerView
     // 当前页面
     private var currentPage = PAGE_START
@@ -45,17 +41,46 @@ class FragmentMain : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+//        val
         // Inflate the layout for this fragment
         _binding = FragmentMainBinding.inflate(inflater, container, false)
         val view = binding.root
         // 初始化
+        bannerView = BannerView(requireContext(), object : BannerView.OnBannerClickListener {
+            override fun onClick(banner: Banner) {
+                val intent = Intent(requireContext(), CourseActivity::class.java)
+                intent.putExtra("url", banner.url)
+                requireContext().startActivity(intent)
+            }
+
+        })
+        loadingAdapter = LoadingAdapter(requireContext())
+        // 初始化隐藏loadingBar
+        loadingAdapter.setState(LoadingStatusEnum.EMPTY_VIEW.statusCode)
         paginationAdapter = PaginationAdapter(requireContext())
         linearLayoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
         binding.articleList.layoutManager = linearLayoutManager
+        // 配置adapter
+        bannerPageAdapter = BannerPageAdapter(bannerView)
+        binding.articleList.adapter = ConcatAdapter(
+            bannerPageAdapter,
+            paginationAdapter,
+            loadingAdapter
+        )
         // 获取课程数据
-        loadCourseData()
-        // 获取banner数据并为recycleView绑定adapter
-        loadBannerData()
+        loadFirstPageCourse()
+        // 获取banner数据
+        loadBanners()
+        // 为recycleView绑定滚动监听器
+        binding.articleList.addOnScrollListener(object: PaginationScrollListener(linearLayoutManager) {
+            override fun onScrollToBottom() {
+                if (!isLastPage && currentPage != 0) {
+                    loadCourse()
+                } else if (isLastPage) {
+                    changeLoadingState(LoadingStatusEnum.STATUS_FINISHED.statusCode)
+                }
+            }
+        })
         return view
     }
 
@@ -65,74 +90,67 @@ class FragmentMain : Fragment() {
         _binding = null
     }
 
+    private fun loadFirstPageCourse() {
+        val courseList: MutableList<Course> = ArrayList()
+        HttpUtils.get().url(TOP_COURSE_LIST_API).build().enqueue(HttpUtils.typeToken<ApiResponse<MutableList<Course>>>(), object : ApiCallback<MutableList<Course>>() {
+            override fun onFiled(exception: Exception) {
+                //
+            }
 
-    private fun loadCourseData() {
-        CourseBiz().getCourses(currentPage, object: CourseBiz.Callback {
-            @SuppressLint("NotifyDataSetChanged")
-            override fun onSuccess(courseList: MutableList<Course>, totalPages: Int) {
-                // 请求成功页数 + 1
-                currentPage += 1
+            override fun onReqSuccess(ret: MutableList<Course>) {
+                courseList.addAll(CourseBiz.parseCourseContent(ret))
                 paginationAdapter.addCourses(courseList)
-                if (courseTotalPages == 0) {
-                    courseTotalPages = totalPages
-                }
-                // 判断是否最后一页
-                if (currentPage > courseTotalPages) {
-                    isLastPage = true
-                }
-                paginationAdapter.notifyDataSetChanged()
+                loadCourse()
             }
-            override fun onFailed(exception: Exception) {
-                println(exception)
-                return
-            }
+
         })
     }
 
-    private fun loadBannerData() {
-        BannerBiz().getBannersTask(object: Callback<BannerDataBase> {
+    private fun loadCourse() {
+        changeLoadingState(LoadingStatusEnum.STATUS_LOADING.statusCode)
+        val courseList: MutableList<Course> = ArrayList()
+        val courseListApi = "https://www.wanandroid.com/article/list/$currentPage/json"
+        HttpUtils.get().url(courseListApi).build().enqueue(HttpUtils.typeToken<ApiResponse<CourseResponse>>(), object : ApiCallback<CourseResponse>() {
+            override fun onFiled(exception: Exception) {
+                changeLoadingState(LoadingStatusEnum.STATUS_FAILED.statusCode)
+            }
+
             @SuppressLint("NotifyDataSetChanged")
-            override fun onSuccess(database: BannerDataBase) {
-                bannerDataBase = database
-                bannerView = BannerView(requireContext(), bannerDataBase, object : BannerView.OnBannerClickListener {
-                    override fun onClick(banner: Banner) {
-                        val intent = Intent(requireContext(), CourseActivity::class.java)
-                        intent.putExtra("url", banner.url)
-                        requireContext().startActivity(intent)
-                    }
-
-                })
-                bannerPageAdapter = BannerPageAdapter(bannerView)
-                binding.articleList.adapter = ConcatAdapter(
-                    bannerPageAdapter,
-                    paginationAdapter
-                )
-                binding.articleList.addOnScrollListener(object: PaginationScrollListener(linearLayoutManager) {
-                    override fun onScrollToBottom() {
-                        if (!isLastPage) {
-                            println("加载新数据了")
-                            loadCourseData()
-                        }
-                    }
-                })
-            }
-
-            override fun onFailed(exception: Exception) {
-
-            }
-
-            override fun parseContent(content: String): BannerDataBase {
-                val bannerList: MutableList<Banner> = ArrayList()
-                val netDataBase: NetDataBase<Banner> =
-                    GsonUtils.gsonProvider.fromJson<NetDataBase<Banner>>(content, NetDataBase::class.java)
-                if (netDataBase.errorCode == 0) {
-                    val dataArray = GsonUtils.newInstance().bean2Json(netDataBase.data)
-                    bannerList.addAll(GsonUtils.newInstance().gson2List(dataArray, Banner::class.java))
+            override fun onReqSuccess(ret: CourseResponse) {
+                courseTotalPages = ret.pageCount?:0
+                println(ret)
+                if (currentPage < courseTotalPages) {
+                    currentPage += 1
+                } else {
+                    isLastPage = true
                 }
-                return  BannerDataBase(bannerList)
+                courseList.addAll(CourseBiz.parseCourseContent(ret.datas))
+                paginationAdapter.addCourses(courseList)
+                changeLoadingState(LoadingStatusEnum.EMPTY_VIEW.statusCode)
+                paginationAdapter.notifyDataSetChanged()
             }
 
         })
+    }
+
+    private fun loadBanners() {
+        HttpUtils.get().url(BANNER_API).build().enqueue(HttpUtils.typeToken<ApiResponse<List<Banner>>>(), object : ApiCallback<List<Banner>>() {
+            override fun onFiled(exception: Exception) {
+                //
+            }
+
+            override fun onReqSuccess(ret: List<Banner>) {
+                bannerView.addBanners(ret)
+                bannerView.initView()
+            }
+
+        })
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    private fun changeLoadingState(state: Int) {
+        loadingAdapter.setState(state)
+        loadingAdapter.notifyItemChanged(0)
     }
 
     companion object {

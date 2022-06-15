@@ -17,4 +17,8 @@
     <string name="chapter_name">自助·广场Tab</string>
     <string name="banner_img">海报</string>
     <string name="dot_img">海报标记点</string>
+    <string name="loading_failed">下载失败，点击重试</string>
+    <string name="loading_finished">已全部加载完成</string>
+    <string name="load_no_more">全部加载完成</string>
+    <string name="load_more_failed">加载失败，点击重试</string>
 </resources>

@@ -3,9 +3,12 @@ package com.peter.feedapp.utils
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonParser
-import com.google.gson.reflect.TypeToken
+import com.peter.feedapp.bean.JsonArrayBase
+import java.lang.reflect.ParameterizedType
+import java.lang.reflect.Type
 
 class GsonUtils private constructor(){
+
     /**
      * Bean转gson
      */
@@ -15,7 +18,7 @@ class GsonUtils private constructor(){
     }
 
     /**
-     * gson转成泛型Bean
+     * gson转成泛型具象Bean
      * @param gsonString json字符串
      * @param bean 要转化的类
      */
@@ -25,7 +28,7 @@ class GsonUtils private constructor(){
 
 
     /**
-     * gson转成泛型Bean
+     * gson转成泛型List<Bean>
      */
     fun <T> gson2List(gsonString: String, bean: Class<T>): MutableList<T>{
         val list: MutableList<T> = ArrayList()
@@ -36,9 +39,21 @@ class GsonUtils private constructor(){
         return list
     }
 
+    /**
+     * data为array
+     */
+    fun <T> fromJsonArray(gsonString: String, classOfT: Class<T>): JsonArrayBase<List<T>> {
+        // 生成List<T>
+        val listType: Type = ParameterizedTypeImpl<List<T>>(GsonUtils.classOf(), arrayOf(classOfT))
+        val type: Type = ParameterizedTypeImpl<JsonArrayBase<List<T>>>(GsonUtils.classOf(), arrayOf(listType))
+        return gsonProvider.fromJson(gsonString, type)
+    }
+
     companion object {
         var gsonProvider = Gson()
         private set
+
+        inline fun <reified T> classOf() = T::class.java
 
         private var instance: GsonUtils? = null
             get() {
@@ -53,11 +68,24 @@ class GsonUtils private constructor(){
             return instance!!
         }
     }
-}
 
-fun main() {
-    fun<T> getType(str: String): T {
-        val typeToken = object : TypeToken<T>() {}.type
-        return GsonUtils.gsonProvider.fromJson(str, typeToken)
+    class ParameterizedTypeImpl<T>(private val classOfT: Class<T>, private var args: Array<Type>?): ParameterizedType {
+        init {
+            args = if (args!=null) args else arrayOf()
+        }
+
+        override fun getActualTypeArguments(): Array<Type> {
+            return args!!
+        }
+
+        override fun getRawType(): Type {
+             return classOfT
+        }
+
+        override fun getOwnerType(): Type? {
+            return null
+        }
+
+
     }
 }

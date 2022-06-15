@@ -1,16 +1,16 @@
 package com.peter.feedapp.bean
-import com.google.gson.annotations.Expose
-
 
 data class Course(var id: Int?,
                   var title: String?,
-                  @Expose(serialize = true, deserialize = false) var desc: String?,
+                  var desc: String?,
                   var envelopePic: String?,
-                  @Expose(serialize = true, deserialize = false) var author: String?,
+                  var author: String?,
+                  var shareUser: String?,
                   var niceDate: String?,
                   var link: String?,
                   var superChapterName: String?,
                   var chapterName: String?,
-                  @Expose(serialize = true, deserialize = false) var tag: String?,
+                  var tags: List<Tag>?,
+                  var showTag: String?,
                   var fresh: Boolean?,
                   var type: Int?)

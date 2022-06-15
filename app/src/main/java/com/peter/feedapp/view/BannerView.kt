@@ -13,13 +13,13 @@ import androidx.viewpager2.widget.ViewPager2
 import com.peter.feedapp.R
 import com.peter.feedapp.adapter.PaginationAdapter
 import com.peter.feedapp.bean.Banner
-import com.peter.feedapp.bean.BannerDataBase
 import com.peter.feedapp.databinding.BannerImgBinding
 import com.squareup.picasso.Picasso
 
 private const val PAGE_START = 1
 
-class BannerView(context: Context, private var bannerDataBase: BannerDataBase, var clickListener: OnBannerClickListener?): RelativeLayout(context){
+class BannerView(context: Context, var clickListener: OnBannerClickListener?): RelativeLayout(context){
+    private var _bannerList: MutableList<Banner> = mutableListOf()
     private var adapter: BannerAdapter
     lateinit var viewPager2: ViewPager2
         private set
@@ -37,20 +37,7 @@ class BannerView(context: Context, private var bannerDataBase: BannerDataBase, v
 
     }
 
-    constructor(context: Context): this(context, BannerDataBase(ArrayList()), null)
-
-    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
-        val action = ev?.action
-        if (action == MotionEvent.ACTION_DOWN) {
-            // 移除mLooper
-            viewPager2.removeCallbacks(mLooper)
-        }
-        if (action == MotionEvent.ACTION_UP) {
-            viewPager2.postDelayed(mLooper, 5000)
-        }
-        return super.dispatchTouchEvent(ev)
-    }
-
+    constructor(context: Context): this(context, null)
 
     init {
         // 初始化样式
@@ -59,10 +46,8 @@ class BannerView(context: Context, private var bannerDataBase: BannerDataBase, v
         val bannerParams = LayoutParams(LayoutParams.MATCH_PARENT, PaginationAdapter(context).getPixelFromDp(200F))
         this.layoutParams = bannerParams
         viewPager2.layoutParams = bannerParams
-        initData()
         adapter = BannerAdapter(context, banners, object: OnBannerClickListener {
             override fun onClick(banner: Banner) {
-                println("点击Banner")
                 clickListener?.onClick(banner)
             }
         })
@@ -93,22 +78,42 @@ class BannerView(context: Context, private var bannerDataBase: BannerDataBase, v
 
         })
 
-        // 自动滑动
         this.addView(viewPager2)
-        // 初始化dots
-        buildDots()
+        // 自动滑动
         viewPager2.postDelayed(mLooper, 5000)
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    private fun initData() {
-        totalPage = bannerDataBase.bannerList.size
+    fun initView() {
+        buildDots()
+        adapter.notifyDataSetChanged()
+    }
+
+    fun addBanners(banners: List<Banner>) {
+        _bannerList.addAll(banners)
+        initBanner()
+    }
+
+    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
+        val action = ev?.action
+        if (action == MotionEvent.ACTION_DOWN) {
+            // 移除mLooper
+            viewPager2.removeCallbacks(mLooper)
+        }
+        if (action == MotionEvent.ACTION_UP) {
+            viewPager2.postDelayed(mLooper, 5000)
+        }
+        return super.dispatchTouchEvent(ev)
+    }
+
+    private fun initBanner() {
+        totalPage = _bannerList.size
         // 第一位添加最后一张
-        banners.add(0, bannerDataBase.bannerList.last())
+        banners.add(0, _bannerList.last())
         // 添加正常数据
-        banners.addAll(bannerDataBase.bannerList)
+        banners.addAll(_bannerList)
         // 最后一位添加第一张
-        banners.add(bannerDataBase.bannerList.first())
+        banners.add(_bannerList.first())
 
     }
 

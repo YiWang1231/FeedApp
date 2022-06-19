@@ -1,8 +1,8 @@
 package com.peter.feedapp.adapter
 
-enum class LoadingStatusEnum(val statusCode: Int) {
-    STATUS_LOADING(10000),
-    STATUS_FINISHED(20000),
-    STATUS_FAILED(-100000),
-    EMPTY_VIEW(-200000)
+enum class LoadingStatusEnum() {
+    STATUS_LOADING,
+    STATUS_FINISHED,
+    STATUS_FAILED,
+    EMPTY_VIEW
 }

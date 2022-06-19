@@ -2,7 +2,6 @@ package com.peter.feedapp.utils
 
 import android.os.Handler
 import android.os.Looper
-import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import com.peter.feedapp.bean.*
@@ -17,7 +16,7 @@ private val mHandler = Handler(Looper.getMainLooper())
 
 class HttpUtils private constructor(val method: String?, private val builder: Request.Builder, val url: String?, val params: JsonObject?){
 
-    private constructor(builder: Builder): this(
+    constructor(builder: BaseBuilder): this(
         builder.method,
         builder.builder,
         builder.url,
@@ -28,18 +27,16 @@ class HttpUtils private constructor(val method: String?, private val builder: Re
 
         inline fun <reified T> classOf() = T::class.java
 
-        inline fun <reified  T> typeToken() = object : TypeToken<T>(){}.type
+        inline fun <reified  T> typeToken() = object : TypeToken<T>(){}.type!!
 
-        inline fun <reified T> getClass(value: T): Class<T> = T::class.java
-
-        fun get(): Builder {
-            val builder = Builder()
+        fun get(): BaseBuilder {
+            val builder = GetBuilder()
             builder.setMethod(GetMethod)
             return builder
         }
 
-        fun post(): Builder {
-            val builder = Builder()
+        fun post(): BaseBuilder {
+            val builder = PostBuilder()
             builder.setMethod(PostMethod)
             return builder
         }
@@ -61,7 +58,7 @@ class HttpUtils private constructor(val method: String?, private val builder: Re
     fun enqueue(callback: JsonDataBaseCallback) {
         val request = builder.build()
         val call = mClient.newCall(request)
-        call.enqueue(object : okhttp3.Callback {
+        call.enqueue(object : Callback {
 
             override fun onFailure(call: Call, e: IOException) {
                 val exception = java.lang.Exception("请求失败")
@@ -124,60 +121,6 @@ class HttpUtils private constructor(val method: String?, private val builder: Re
 
         })
     }
-
-
-    class Builder {
-        var method: String? = null
-            private set
-        var builder = Request.Builder()
-            private set
-        var url: String? = null
-            private set
-        var params: JsonObject? = JsonObject()
-            private set
-
-        fun setMethod(inputMethod: String) {
-            this.method = inputMethod
-        }
-
-        fun url(inputUrl: String) = apply {
-            this.url = inputUrl
-        }
-
-        fun headers(key: String, value: String) = apply {
-            builder.addHeader(key, value)
-        }
-
-        fun addParams(key: String, value: String) = apply {
-            this.params?.addProperty(key, value)
-        }
-
-        fun build(): HttpUtils {
-            val p = this.params
-            var tempUrl = this.url
-            if (p?.entrySet()?.isNotEmpty() == true) {
-                if (this.method == GetMethod) {
-                    tempUrl  = "${tempUrl}?"
-                    for ( param in p.entrySet()) {
-                        tempUrl = if (param != p.entrySet().last()) {
-                            "${tempUrl}${param.key}=${param.value.asString}&"
-                        } else {
-                            "${tempUrl}${param.key}=${param.value.asInt}"
-                        }
-                    }
-                } else if (this.method == PostMethod) {
-                    val formBodyBuilder = FormBody.Builder()
-                    for ( param in p.entrySet()) {
-                        formBodyBuilder.add(param.key, param.value.asString)
-                    }
-                    val formBody = formBodyBuilder.build()
-                    this.builder.post(formBody)
-                }
-            }
-            tempUrl?.let { this.builder.url(it) }
-            return HttpUtils(this)
-        }
-    }
 }
 
 interface JsonDataBaseCallback {
@@ -199,17 +142,4 @@ abstract class ApiCallback<T>: HttpCallback<ApiResponse<T>> {
             onFiled(java.lang.Exception(result.errorMsg))
         }
     }
-}
-
-fun main() {
-    HttpUtils.get().url("https://www.wanandroid.com/banner/json").build().enqueue(HttpUtils.typeToken<ApiResponse<List<Banner>>>(), object : ApiCallback<List<Banner>> (){
-        override fun onFiled(exception: Exception) {
-
-        }
-
-        override fun onReqSuccess(ret: List<Banner>) {
-            println(ret)
-        }
-
-    })
 }

@@ -54,9 +54,13 @@ class FragmentMain : Fragment() {
             }
 
         })
-        loadingAdapter = LoadingAdapter(requireContext())
+        loadingAdapter = LoadingAdapter(requireContext(), object : LoadingAdapter.FailedCallback {
+            override fun onClick() {
+                loadCourse()
+            }
+        })
         // 初始化隐藏loadingBar
-        loadingAdapter.setState(LoadingStatusEnum.EMPTY_VIEW.statusCode)
+        loadingAdapter.setState(LoadingStatusEnum.EMPTY_VIEW)
         paginationAdapter = PaginationAdapter(requireContext())
         linearLayoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
         binding.articleList.layoutManager = linearLayoutManager
@@ -76,8 +80,6 @@ class FragmentMain : Fragment() {
             override fun onScrollToBottom() {
                 if (!isLastPage && currentPage != 0) {
                     loadCourse()
-                } else if (isLastPage) {
-                    changeLoadingState(LoadingStatusEnum.STATUS_FINISHED.statusCode)
                 }
             }
         })
@@ -107,26 +109,29 @@ class FragmentMain : Fragment() {
     }
 
     private fun loadCourse() {
-        changeLoadingState(LoadingStatusEnum.STATUS_LOADING.statusCode)
+        loadingAdapter.setState(LoadingStatusEnum.STATUS_LOADING)
         val courseList: MutableList<Course> = ArrayList()
         val courseListApi = "https://www.wanandroid.com/article/list/$currentPage/json"
         HttpUtils.get().url(courseListApi).build().enqueue(HttpUtils.typeToken<ApiResponse<CourseResponse>>(), object : ApiCallback<CourseResponse>() {
             override fun onFiled(exception: Exception) {
-                changeLoadingState(LoadingStatusEnum.STATUS_FAILED.statusCode)
+                loadingAdapter.setState(LoadingStatusEnum.STATUS_FAILED)
             }
 
             @SuppressLint("NotifyDataSetChanged")
             override fun onReqSuccess(ret: CourseResponse) {
                 courseTotalPages = ret.pageCount?:0
-                println(ret)
                 if (currentPage < courseTotalPages) {
                     currentPage += 1
                 } else {
                     isLastPage = true
                 }
-                courseList.addAll(CourseBiz.parseCourseContent(ret.datas))
-                paginationAdapter.addCourses(courseList)
-                changeLoadingState(LoadingStatusEnum.EMPTY_VIEW.statusCode)
+                if (!isLastPage) {
+                    courseList.addAll(CourseBiz.parseCourseContent(ret.datas))
+                    paginationAdapter.addCourses(courseList)
+                    loadingAdapter.setState(LoadingStatusEnum.EMPTY_VIEW)
+                } else {
+                    loadingAdapter.setState(LoadingStatusEnum.STATUS_FINISHED)
+                }
                 paginationAdapter.notifyDataSetChanged()
             }
 
@@ -145,12 +150,6 @@ class FragmentMain : Fragment() {
             }
 
         })
-    }
-
-    @SuppressLint("NotifyDataSetChanged")
-    private fun changeLoadingState(state: Int) {
-        loadingAdapter.setState(state)
-        loadingAdapter.notifyItemChanged(0)
     }
 
     companion object {

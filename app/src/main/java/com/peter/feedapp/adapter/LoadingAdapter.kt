@@ -5,14 +5,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
-import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.annotation.LayoutRes
 import androidx.recyclerview.widget.RecyclerView
 import com.peter.feedapp.R
-import com.peter.feedapp.adapter.LoadingStatusEnum
 
-class LoadingAdapter(val context: Context) : RecyclerView.Adapter<LoadingAdapter.BaseViewHolder>(){
+class LoadingAdapter(val context: Context,private val failedCallback: FailedCallback): RecyclerView.Adapter<LoadingAdapter.BaseViewHolder>(){
     @LayoutRes
     var loadingStyleResId = R.layout.loading_more
     @LayoutRes
@@ -20,14 +18,13 @@ class LoadingAdapter(val context: Context) : RecyclerView.Adapter<LoadingAdapter
     @LayoutRes
     var loadingFinishedResId = R.layout.loading_no_more
 
-    private var loadingState = LoadingStatusEnum.STATUS_LOADING.statusCode
+    private var loadingState = LoadingStatusEnum.EMPTY_VIEW
 
-    private var statusType = LoadingStatusEnum.STATUS_LOADING.statusCode
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder{
         return when(loadingState) {
-            LoadingStatusEnum.STATUS_FAILED.statusCode -> createLoadFailedHolder(parent)
-            LoadingStatusEnum.STATUS_FINISHED.statusCode -> createLoadingFinished(parent)
-            LoadingStatusEnum.EMPTY_VIEW.statusCode -> createEmptyHolder()
+            LoadingStatusEnum.STATUS_FAILED -> createLoadFailedHolder(parent)
+            LoadingStatusEnum.STATUS_FINISHED -> createLoadingFinished(parent)
+            LoadingStatusEnum.EMPTY_VIEW -> createEmptyHolder()
             else -> createLoadMoreHolder(parent)
         }
     }
@@ -37,11 +34,16 @@ class LoadingAdapter(val context: Context) : RecyclerView.Adapter<LoadingAdapter
     }
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
-        //
+        if (loadingState == LoadingStatusEnum.STATUS_FAILED) {
+            holder.itemView.setOnClickListener {
+                failedCallback.onClick()
+            }
+        }
     }
 
-    fun setState(state: Int) {
+    fun setState(state: LoadingStatusEnum) {
         this.loadingState = state
+        notifyItemChanged(0)
     }
 
     private fun createLoadMoreHolder(parent: ViewGroup): LoadingMoreViewHolder {
@@ -62,24 +64,23 @@ class LoadingAdapter(val context: Context) : RecyclerView.Adapter<LoadingAdapter
     private fun createEmptyHolder():EmptyViewHolder {
         val view = LinearLayout(context)
         val layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0)
+        view.layoutParams = layoutParams
         return EmptyViewHolder(view)
     }
 
-    open class BaseViewHolder(view: View): RecyclerView.ViewHolder(view) {
-        var viewType = LoadingStatusEnum.STATUS_LOADING.statusCode
-    }
+    open class BaseViewHolder(view: View): RecyclerView.ViewHolder(view)
 
-    class LoadingMoreViewHolder(view: View): BaseViewHolder(view) {
-        lateinit var progressBar: ProgressBar
-    }
+    class LoadingMoreViewHolder(view: View): BaseViewHolder(view)
 
     class LoadingFailedViewHolder(view: View): BaseViewHolder(view) {
         lateinit var textView: TextView
     }
 
-    class LoadingFinishedViewHolder(view: View): BaseViewHolder(view) {
-        lateinit var textView: TextView
-    }
+    class LoadingFinishedViewHolder(view: View): BaseViewHolder(view)
 
     class EmptyViewHolder(view: View): BaseViewHolder(view)
+
+    interface FailedCallback {
+        fun onClick()
+    }
 }
